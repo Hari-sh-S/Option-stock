@@ -185,7 +185,7 @@ if kite_trader.is_kite_configured():
             st.error("❌ Zerodha login failed. Please try again.")
 
 # Main Tabs
-main_tabs = st.tabs(["Backtest", "Backtest Logs", "Execute Trades", "Data Download", "🔐 Dhan Auth"])
+main_tabs = st.tabs(["Backtest", "Backtest Logs", "Execute Trades", "Data Download", "🔐 Dhan Auth", "🔍 Scanner", "🎯 Options Backtest"])
 
 # ==================== TAB 1: BACKTEST ====================
 with main_tabs[0]:
@@ -3389,3 +3389,522 @@ DHAN_ACCESS_TOKEN = ""
                 st.error(f"❌ {ve}")
             except Exception as e:
                 st.error(f"❌ Connection failed: {e}")
+
+
+# ==================== TAB 6: SCANNER ====================
+with main_tabs[5]:
+    import sys
+    from pathlib import Path as _Path
+    _ROOT = _Path(__file__).resolve().parent
+    if str(_ROOT) not in sys.path:
+        sys.path.insert(0, str(_ROOT))
+
+    from core.signal_builder import (
+        SignalBuilder, SignalRule, Condition,
+        STRATEGY_TEMPLATES, AVAILABLE_INDICATORS, AVAILABLE_OPERATORS,
+    )
+    from core.universe import UniverseManager
+    from core.scanner import Scanner, DEFAULT_SCORING_WEIGHTS
+    from core.scoring import ScoreParser as ExtScoreParser
+
+    st.markdown("""
+    <div style='background:linear-gradient(135deg,#0f0c29,#302b63,#24243e);
+                padding:1.5rem 2rem;border-radius:12px;margin-bottom:1rem;color:white;'>
+        <h2 style='margin:0;font-size:1.6rem;'>🔍 Entry / Exit Signal Scanner</h2>
+        <p style='color:rgba(255,255,255,0.65);margin-top:0.3rem;'>
+        Build signal rules, scan your universe, and rank stocks by composite score
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # ── Init session state ────────────────────────────────────────────────────
+    for _k in ["sc_entry_conds", "sc_exit_conds", "sc_mode", "sc_results",
+               "sc_entry_logic", "sc_exit_logic"]:
+        if _k not in st.session_state:
+            if _k == "sc_mode":
+                st.session_state[_k] = "Equity"
+            elif _k.endswith("_logic"):
+                st.session_state[_k] = "AND"
+            else:
+                st.session_state[_k] = [] if "conds" in _k else None
+
+    _um = UniverseManager()
+
+    # ── STEP 1: Mode & Universe ──────────────────────────────────────────────
+    st.subheader("Step 1 — Asset Class & Universe")
+    _mc1, _mc2 = st.columns(2)
+    with _mc1:
+        if st.button("📈 Equity Mode", use_container_width=True,
+                     type="primary" if st.session_state.sc_mode == "Equity" else "secondary",
+                     key="sc_btn_equity"):
+            st.session_state.sc_mode = "Equity"
+            st.rerun()
+    with _mc2:
+        if st.button("🎯 Options Mode (Nifty Index)", use_container_width=True,
+                     type="primary" if st.session_state.sc_mode != "Equity" else "secondary",
+                     key="sc_btn_options"):
+            st.session_state.sc_mode = "Options (Nifty Index)"
+            st.rerun()
+    st.caption(f"**Mode:** {st.session_state.sc_mode}")
+
+    if st.session_state.sc_mode == "Equity":
+        _usrc = st.radio("Universe", ["Predefined Index", "Custom List"], horizontal=True, key="sc_usrc")
+        if _usrc == "Predefined Index":
+            _idx = st.selectbox("Index", _um.get_index_display_names(), key="sc_index")
+            _tickers = _um.get_equity_universe(_idx)
+            st.caption(f"📋 {len(_tickers)} stocks in {_idx}")
+        else:
+            _raw = st.text_area("Tickers (comma/newline separated)", height=80, key="sc_custom_txt",
+                                placeholder="RELIANCE, TCS, INFY\nHDFCBANK")
+            _tickers = _um.parse_custom_tickers(_raw) if _raw.strip() else []
+            if _tickers:
+                st.caption(f"📋 {len(_tickers)} tickers: {', '.join(_tickers[:8])}{'...' if len(_tickers)>8 else ''}")
+    else:
+        st.info("🎯 Signals evaluated on **NIFTY50 Index** (^NSEI). Use Options Backtest tab to simulate trades.")
+        _tickers = ["^NSEI"]
+
+    _sd_col, _ed_col = st.columns(2)
+    with _sd_col:
+        _sc_start = st.date_input("Start Date", value=pd.Timestamp("2023-01-01"), key="sc_start")
+    with _ed_col:
+        _sc_end = st.date_input("End Date", value=pd.Timestamp.today(), key="sc_end")
+
+    st.divider()
+
+    # ── STEP 2: Signal Builder ───────────────────────────────────────────────
+    st.subheader("Step 2 — Entry / Exit Signal Builder")
+
+    def _sc_rule_builder(label, cond_key, logic_key):
+        """Inline rule builder — returns a SignalRule."""
+        _tmpl_options = ["(Custom)"] + list(STRATEGY_TEMPLATES.keys())
+        _tmpl = st.selectbox(f"{label} Template", _tmpl_options, key=f"{cond_key}_tmpl")
+
+        # Seed from template
+        _direction = "entry" if "entry" in cond_key else "exit"
+        if _tmpl != "(Custom)":
+            _rule_tmpl = STRATEGY_TEMPLATES[_tmpl].get(_direction, SignalRule())
+            if st.session_state.get(f"{cond_key}_last_tmpl") != _tmpl:
+                st.session_state[cond_key] = [c.to_dict() for c in _rule_tmpl.conditions]
+                st.session_state[logic_key] = _rule_tmpl.logic
+                st.session_state[f"{cond_key}_last_tmpl"] = _tmpl
+
+        if cond_key not in st.session_state:
+            st.session_state[cond_key] = []
+
+        with st.container(border=True):
+            _conds = st.session_state[cond_key]
+            if st.button(f"➕ Add Condition", key=f"{cond_key}_add"):
+                _conds.append({"left": "RSI_14", "operator": ">", "right": "50"})
+                st.session_state[cond_key] = _conds
+                st.rerun()
+
+            _del_idx = None
+            for _i, _c in enumerate(_conds):
+                _cc = st.columns([2.5, 2, 2, 0.5])
+                with _cc[0]:
+                    _left_opts = AVAILABLE_INDICATORS
+                    _li = _left_opts.index(_c.get("left", "RSI_14")) if _c.get("left") in _left_opts else 0
+                    _left = st.selectbox("L", _left_opts, index=_li,
+                                         key=f"{cond_key}_l_{_i}", label_visibility="collapsed")
+                with _cc[1]:
+                    _oi = AVAILABLE_OPERATORS.index(_c.get("operator", ">")) if _c.get("operator") in AVAILABLE_OPERATORS else 0
+                    _op = st.selectbox("O", AVAILABLE_OPERATORS, index=_oi,
+                                       key=f"{cond_key}_o_{_i}", label_visibility="collapsed")
+                with _cc[2]:
+                    _right = st.text_input("R", value=str(_c.get("right", "50")),
+                                           key=f"{cond_key}_r_{_i}", label_visibility="collapsed")
+                with _cc[3]:
+                    if st.button("✕", key=f"{cond_key}_d_{_i}"):
+                        _del_idx = _i
+                _conds[_i] = {"left": _left, "operator": _op, "right": _right}
+
+            if _del_idx is not None:
+                _conds.pop(_del_idx)
+                st.session_state[cond_key] = _conds
+                st.rerun()
+
+            st.session_state[cond_key] = _conds
+            _logic_sel = st.selectbox("Logic", ["AND", "OR"],
+                                       index=0 if st.session_state[logic_key] == "AND" else 1,
+                                       key=f"{logic_key}_sel")
+            st.session_state[logic_key] = _logic_sel
+
+        # Build SignalRule
+        _built_conds = []
+        for _c in _conds:
+            _r = _c["right"]
+            try:
+                _r = float(_r)
+            except (ValueError, TypeError):
+                pass
+            _built_conds.append(Condition(_c["left"], _c["operator"], _r))
+        return SignalRule(name=label, logic=st.session_state[logic_key], conditions=_built_conds)
+
+    _e_tab, _x_tab = st.tabs(["🟢 Entry Conditions", "🔴 Exit Conditions"])
+    with _e_tab:
+        _entry_rule = _sc_rule_builder("Entry", "sc_entry_conds", "sc_entry_logic")
+    with _x_tab:
+        _exit_rule = _sc_rule_builder("Exit", "sc_exit_conds", "sc_exit_logic")
+
+    st.divider()
+
+    # ── STEP 3: Scoring ──────────────────────────────────────────────────────
+    st.subheader("Step 3 — Scoring Weights")
+    _esp = ExtScoreParser()
+    _scoring_opts = _esp.get_scanner_scoring_options()
+    _sc_weights = {}
+    with st.expander("⚙️ Scoring Weights (optional — leave at 0 to skip)", expanded=False):
+        for _grp, _metrics in _scoring_opts.items():
+            st.markdown(f"**{_grp}**")
+            _wcols = st.columns(len(_metrics))
+            for _j, _m in enumerate(_metrics):
+                with _wcols[_j]:
+                    _dir = "desc" if any(_k in _m for _k in ["Volatility", "Drawdown"]) else "asc"
+                    _w = st.slider(_m, 0.0, 1.0, 0.1, 0.05, key=f"sc_w_{_m.replace(' ','_')}")
+                    if _w > 0:
+                        _sc_weights[_m] = (_w, _dir)
+
+    if not _sc_weights:
+        _sc_weights = DEFAULT_SCORING_WEIGHTS
+
+    st.divider()
+
+    # ── STEP 4: Run ─────────────────────────────────────────────────────────
+    _run_col, _clr_col, _ = st.columns([1, 1, 3])
+    with _run_col:
+        _run_sc = st.button("🚀 Run Scanner", type="primary", key="sc_run_btn")
+    with _clr_col:
+        if st.button("🔄 Clear", key="sc_clr_btn"):
+            st.session_state.sc_results = None
+            st.rerun()
+
+    if _run_sc:
+        if not _tickers:
+            st.error("No tickers selected.")
+        elif _entry_rule.is_empty():
+            st.error("Add at least one entry condition.")
+        elif _exit_rule.is_empty():
+            st.error("Add at least one exit condition.")
+        else:
+            if st.session_state.sc_mode == "Equity":
+                _pb = st.progress(0, "Starting...")
+                _st = st.empty()
+
+                def _on_prog(ticker, i, total):
+                    _pb.progress((i + 1) / total, f"Scanning {ticker} ({i+1}/{total})")
+                    _st.caption(f"⏳ {ticker}")
+
+                with st.spinner("Running scanner..."):
+                    _scanner = Scanner(_tickers, _entry_rule, _exit_rule,
+                                       str(_sc_start), str(_sc_end),
+                                       _sc_weights, _on_prog)
+                    _results = _scanner.run()
+                _pb.empty(); _st.empty()
+                if _results.empty:
+                    st.warning("No results. Check tickers/date range.")
+                else:
+                    st.session_state.sc_results = _results
+                    # Also store rules for Options Backtest tab to import
+                    st.session_state.sc_entry_rule_obj = _entry_rule
+                    st.session_state.sc_exit_rule_obj = _exit_rule
+                    st.success(f"✅ Scanned {len(_results)} stocks!")
+            else:
+                with st.spinner("Evaluating NIFTY signals..."):
+                    _nifty_res = Scanner.run_nifty_options_scan(
+                        _entry_rule, _exit_rule, str(_sc_start), str(_sc_end))
+                if _nifty_res:
+                    st.session_state.sc_results = _nifty_res
+                    st.session_state.sc_entry_rule_obj = _entry_rule
+                    st.session_state.sc_exit_rule_obj = _exit_rule
+                    st.success(f"✅ {len(_nifty_res.get('entry_dates',[]))} entry | "
+                               f"{len(_nifty_res.get('exit_dates',[]))} exit signals on NIFTY")
+                else:
+                    st.error("Failed to fetch NIFTY data.")
+
+    # ── Results ──────────────────────────────────────────────────────────────
+    if st.session_state.sc_results is not None:
+        _res = st.session_state.sc_results
+        st.divider()
+        st.subheader("📊 Results")
+
+        if isinstance(_res, pd.DataFrame):
+            _k1, _k2, _k3, _k4 = st.columns(4)
+            _k1.metric("Stocks", len(_res))
+            _k2.metric("Entry Signals", int(_res["Entry_Signal"].sum()))
+            _k3.metric("Exit Signals",  int(_res["Exit_Signal"].sum()))
+            _k4.metric("Top Score", f"{_res['Score'].max():.1f}")
+
+            # Ranked table
+            _disp = _res[["Rank", "Ticker", "Last_Close", "Entry_Signal",
+                           "Score", "Entry_Signal_Strength"]].copy()
+            _disp["Score"] = _disp["Score"].apply(lambda x: f"{x:.1f}")
+            _disp["Entry_Signal_Strength"] = _disp["Entry_Signal_Strength"].apply(lambda x: f"{x:.0f}%")
+            st.dataframe(_disp, use_container_width=True, hide_index=True)
+
+            # Bar chart
+            import plotly.express as px
+            _fig = px.bar(
+                _res.sort_values("Score", ascending=False).head(25),
+                x="Ticker", y="Score", color="Score",
+                color_continuous_scale="Viridis",
+                title="Top 25 Stocks by Score"
+            )
+            _fig.update_layout(plot_bgcolor="rgba(0,0,0,0)",
+                               paper_bgcolor="rgba(0,0,0,0)",
+                               font_color="#e0e0e0",
+                               xaxis_tickangle=-45)
+            st.plotly_chart(_fig, use_container_width=True)
+
+            # Entry signal stocks
+            _entry_stocks = _res[_res["Entry_Signal"] == True]
+            if not _entry_stocks.empty:
+                st.markdown("#### 🟢 Stocks With Active Entry Signal")
+                st.dataframe(_entry_stocks[["Rank", "Ticker", "Last_Close", "Score"]],
+                             use_container_width=True, hide_index=True)
+
+            st.download_button("⬇️ Download CSV", _res.to_csv(index=False),
+                               "scanner_results.csv", "text/csv", key="sc_dl")
+
+        elif isinstance(_res, dict):
+            # NIFTY signal scan results
+            import plotly.graph_objects as _pgo
+            _udf = _res.get("underlying_df", pd.DataFrame())
+            _k1, _k2, _k3 = st.columns(3)
+            _k1.metric("Entry Signals", len(_res.get("entry_dates", [])))
+            _k2.metric("Exit Signals",  len(_res.get("exit_dates", [])))
+            _k3.metric("Status", "🟢 ACTIVE" if _res.get("latest_entry") else "⚪ FLAT")
+
+            if not _udf.empty:
+                _fig2 = _pgo.Figure()
+                _fig2.add_trace(_pgo.Candlestick(
+                    x=_udf.index, open=_udf["Open"], high=_udf["High"],
+                    low=_udf["Low"], close=_udf["Close"], name="NIFTY"))
+                _edates = _res.get("entry_dates", [])
+                if _edates:
+                    _ep = _udf.loc[_udf.index.isin(_edates), "Low"] * 0.995
+                    _fig2.add_trace(_pgo.Scatter(x=_edates, y=_ep.tolist(),
+                        mode="markers", name="Entry",
+                        marker=dict(symbol="triangle-up", color="#00ff88", size=12)))
+                _xdates = _res.get("exit_dates", [])
+                if _xdates:
+                    _xp = _udf.loc[_udf.index.isin(_xdates), "High"] * 1.005
+                    _fig2.add_trace(_pgo.Scatter(x=_xdates, y=_xp.tolist(),
+                        mode="markers", name="Exit",
+                        marker=dict(symbol="triangle-down", color="#ff4444", size=12)))
+                _fig2.update_layout(plot_bgcolor="rgba(0,0,0,0)",
+                                    paper_bgcolor="rgba(0,0,0,0)",
+                                    font_color="#e0e0e0",
+                                    xaxis_rangeslider_visible=False, height=480)
+                st.plotly_chart(_fig2, use_container_width=True)
+            st.info("💡 **Next**: Go to the **🎯 Options Backtest** tab to simulate a strategy using these signals.")
+
+
+# ==================== TAB 7: OPTIONS BACKTEST ====================
+with main_tabs[6]:
+    import sys
+    from pathlib import Path as _Path2
+    _ROOT2 = _Path2(__file__).resolve().parent
+    if str(_ROOT2) not in sys.path:
+        sys.path.insert(0, str(_ROOT2))
+
+    from core.signal_builder import SignalRule as _SigRule, Condition as _Cond, STRATEGY_TEMPLATES as _TMPLS
+    from core.options_engine import (
+        OptionsBacktestEngine, OPTION_STRATEGY_CONFIGS, NIFTY_LOT_SIZE, OptionLeg
+    )
+    import plotly.graph_objects as _go2
+
+    st.markdown("""
+    <div style='background:linear-gradient(135deg,#0a0a1a,#1a0533,#0d1a4a);
+                padding:1.5rem 2rem;border-radius:12px;margin-bottom:1rem;color:white;'>
+        <h2 style='margin:0;font-size:1.6rem;'>🎯 NIFTY Options Backtest</h2>
+        <p style='color:rgba(255,255,255,0.65);margin-top:0.3rem;'>
+        Simulate options strategies triggered by entry/exit signals on the NIFTY Index
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # ── Config ───────────────────────────────────────────────────────────────
+    st.subheader("⚙️ Strategy Configuration")
+    _ocol1, _ocol2 = st.columns(2)
+    with _ocol1:
+        _opt_strat = st.selectbox("Option Strategy",
+                                   list(OPTION_STRATEGY_CONFIGS.keys()) + ["Custom"],
+                                   key="opt_strat_sel")
+        _strat_desc = {
+            "Buy ATM Call":     "🟢 Single leg — bullish bet. Max loss = premium paid.",
+            "Buy ATM Put":      "🔴 Single leg — bearish bet. Max loss = premium paid.",
+            "Bull Call Spread": "📈 Buy ATM CE + Sell OTM CE. Capped profit, lower cost.",
+            "Bear Put Spread":  "📉 Buy ATM PE + Sell OTM PE. Capped profit, lower cost.",
+            "Long Straddle":    "⚡ Buy ATM CE + ATM PE. Profits from big moves.",
+            "Long Strangle":    "⚡ Buy OTM CE + OTM PE. Cheaper, needs bigger move.",
+            "Custom":           "🔧 Define your own legs below.",
+        }
+        st.caption(_strat_desc.get(_opt_strat, ""))
+    with _ocol2:
+        _opt_lots   = st.number_input("Number of Lots", 1, 50, 1, key="opt_lots")
+        _opt_cap    = st.number_input("Initial Capital (₹)", 100_000, 10_000_000, 500_000,
+                                      step=50_000, key="opt_cap")
+        _opt_vix    = st.toggle("Use India VIX for IV", True, key="opt_vix")
+
+    # Custom legs
+    _custom_legs = None
+    if _opt_strat == "Custom":
+        st.markdown("**Define Custom Legs:**")
+        _n_legs = st.number_input("Number of Legs", 1, 4, 2, key="opt_n_legs")
+        _custom_legs = []
+        for _li in range(int(_n_legs)):
+            _lc = st.columns(4)
+            with _lc[0]:
+                _lt = st.selectbox("Type", ["CE", "PE"], key=f"opt_lt_{_li}")
+            with _lc[1]:
+                _ld = st.selectbox("Dir", ["BUY", "SELL"], key=f"opt_ld_{_li}")
+            with _lc[2]:
+                _lo = st.number_input("Offset×50", -10, 10, 0, key=f"opt_lo_{_li}")
+            with _lc[3]:
+                _ll = st.number_input("Lots", 1, 20, 1, key=f"opt_ll_{_li}")
+            _custom_legs.append(OptionLeg(_lt, _ld, int(_lo), int(_ll)))
+
+    st.divider()
+
+    # ── Signal rules ─────────────────────────────────────────────────────────
+    st.subheader("📡 Signal Rules")
+
+    # Import from Scanner tab if available
+    _has_scanner_rules = "sc_entry_rule_obj" in st.session_state
+    if _has_scanner_rules:
+        if st.button("📥 Import entry/exit rules from Scanner tab", key="opt_import_rules"):
+            st.session_state.opt_entry_rule = st.session_state.sc_entry_rule_obj
+            st.session_state.opt_exit_rule  = st.session_state.sc_exit_rule_obj
+            st.success("✅ Rules imported from Scanner!")
+            st.rerun()
+
+    _tmpl_names2 = ["(Custom)"] + list(_TMPLS.keys())
+    _tmpl2 = st.selectbox("Signal Template", _tmpl_names2, key="opt_tmpl2")
+
+    if _tmpl2 != "(Custom)":
+        _t2 = _TMPLS[_tmpl2]
+        st.session_state.opt_entry_rule = _t2.get("entry", _SigRule())
+        st.session_state.opt_exit_rule  = _t2.get("exit",  _SigRule())
+
+    if "opt_entry_rule" not in st.session_state:
+        st.session_state.opt_entry_rule = _SigRule()
+    if "opt_exit_rule" not in st.session_state:
+        st.session_state.opt_exit_rule = _SigRule()
+
+    _er2, _xr2 = st.columns(2)
+    with _er2:
+        st.markdown("**Entry Conditions**")
+        for _cc2 in st.session_state.opt_entry_rule.conditions:
+            st.code(f"{_cc2.left}  {_cc2.operator}  {_cc2.right}", language=None)
+        if st.session_state.opt_entry_rule.is_empty():
+            st.caption("_(No conditions set — select a template above)_")
+    with _xr2:
+        st.markdown("**Exit Conditions**")
+        for _cc2 in st.session_state.opt_exit_rule.conditions:
+            st.code(f"{_cc2.left}  {_cc2.operator}  {_cc2.right}", language=None)
+        if st.session_state.opt_exit_rule.is_empty():
+            st.caption("_(No conditions set)_")
+
+    st.divider()
+
+    # ── Backtest settings ────────────────────────────────────────────────────
+    st.subheader("📅 Backtest Settings")
+    _bd1, _bd2 = st.columns(2)
+    with _bd1:
+        _bt_start = st.date_input("Start Date", pd.Timestamp("2022-01-01"), key="opt_bt_start")
+    with _bd2:
+        _bt_end = st.date_input("End Date", pd.Timestamp.today(), key="opt_bt_end")
+
+    # Dhan client
+    _dhan_cl = st.session_state.get("dhan_client", None)
+    if _dhan_cl is None:
+        st.warning("⚠️ Dhan not authenticated — Black-Scholes + India VIX will be used for option pricing. "
+                   "Authenticate via **🔐 Dhan Auth** tab for live pricing.")
+
+    st.divider()
+
+    # ── Run ──────────────────────────────────────────────────────────────────
+    if st.button("🚀 Run Options Backtest", type="primary", key="opt_run_btn"):
+        _o_entry = st.session_state.opt_entry_rule
+        _o_exit  = st.session_state.opt_exit_rule
+        if _o_entry.is_empty():
+            st.error("Please select a signal template or import rules from the Scanner tab.")
+        else:
+            with st.spinner("Running NIFTY options backtest..."):
+                _o_engine = OptionsBacktestEngine(
+                    entry_rule=_o_entry,
+                    exit_rule=_o_exit,
+                    strategy_name=_opt_strat,
+                    custom_legs=_custom_legs,
+                    start_date=str(_bt_start),
+                    end_date=str(_bt_end),
+                    initial_capital=float(_opt_cap),
+                    dhan_client=_dhan_cl,
+                    lot_size=NIFTY_LOT_SIZE,
+                    use_vix=_opt_vix,
+                )
+                _o_result = _o_engine.run()
+            st.session_state.opt_result = _o_result
+            st.success("✅ Options backtest complete!")
+
+    # ── Results ──────────────────────────────────────────────────────────────
+    if st.session_state.get("opt_result"):
+        _or = st.session_state.opt_result
+        _om = _or.get("metrics", {})
+        _otrades = _or.get("trades_df", pd.DataFrame())
+        _oeq     = _or.get("equity_df", pd.DataFrame())
+        _oudf    = _or.get("underlying_df", pd.DataFrame())
+
+        st.divider()
+        st.subheader("📊 Backtest Results")
+
+        # KPIs
+        _ok1, _ok2, _ok3, _ok4 = st.columns(4)
+        _ok1.metric("Total P&L",    f"₹{_om.get('Total P&L (INR)', 0):,.0f}")
+        _ok2.metric("Total Return", f"{_om.get('Total Return (%)', 0):.1f}%")
+        _ok3.metric("Win Rate",     f"{_om.get('Win Rate (%)', 0):.0f}%")
+        _ok4.metric("Max Drawdown", f"{_om.get('Max Drawdown (%)', 0):.1f}%")
+        _ok5, _ok6, _ok7, _ok8 = st.columns(4)
+        _ok5.metric("Trades",       _om.get("Total Trades", 0))
+        _ok6.metric("Sharpe",       f"{_om.get('Sharpe Ratio', 0):.2f}")
+        _ok7.metric("Best Trade",   f"₹{_om.get('Best Trade (INR)', 0):,.0f}")
+        _ok8.metric("Worst Trade",  f"₹{_om.get('Worst Trade (INR)', 0):,.0f}")
+
+        # Equity curve
+        if not _oeq.empty:
+            st.markdown("#### 📈 Equity Curve")
+            _efig = _go2.Figure()
+            _efig.add_trace(_go2.Scatter(
+                x=_oeq.index, y=_oeq["Equity"], mode="lines",
+                line=dict(color="#4a90e2", width=2),
+                fill="tozeroy", fillcolor="rgba(74,144,226,0.08)", name="Portfolio"))
+            _efig.update_layout(plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)",
+                                 font_color="#e0e0e0", height=380,
+                                 xaxis_title="Date", yaxis_title="Portfolio Value (₹)")
+            st.plotly_chart(_efig, use_container_width=True)
+
+        # Trade log
+        if not _otrades.empty:
+            st.markdown("#### 🗒️ Trade Log")
+            _td_cols = [c for c in ["entry_date", "exit_date", "entry_spot", "exit_spot",
+                                     "strategy", "legs_detail", "total_pnl_inr", "pnl_pct",
+                                     "exit_reason"] if c in _otrades.columns]
+            _td_disp = _otrades[_td_cols].copy()
+            _td_disp.columns = [c.replace("_", " ").title() for c in _td_cols]
+            st.dataframe(_td_disp, use_container_width=True, hide_index=True)
+
+            # P&L bar chart
+            if "total_pnl_inr" in _otrades.columns:
+                _pfig = _go2.Figure(_go2.Bar(
+                    x=[str(d)[:10] for d in _otrades.get("entry_date", [])],
+                    y=_otrades["total_pnl_inr"],
+                    marker_color=["#00ff88" if p >= 0 else "#ff4444"
+                                  for p in _otrades["total_pnl_inr"]],
+                ))
+                _pfig.update_layout(title="P&L Per Trade",
+                                    plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)",
+                                    font_color="#e0e0e0", height=320)
+                st.plotly_chart(_pfig, use_container_width=True)
+
+            st.download_button("⬇️ Download Trade Log", _otrades.to_csv(index=False),
+                               "nifty_options_trades.csv", "text/csv", key="opt_dl")

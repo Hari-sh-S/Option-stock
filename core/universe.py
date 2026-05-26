@@ -20,7 +20,7 @@ if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
 
 from nifty_universe import INDEX_NAMES, DISPLAY_NAMES, NIFTY_50
-from nse_fetcher import NSEFetcher
+from nse_fetcher import get_universe as _nse_get_universe, get_all_universe_names as _nse_get_names
 
 
 class UniverseManager:
@@ -42,7 +42,7 @@ class UniverseManager:
 
     MODES = ["Equity", "Options (Nifty Index)"]
 
-    # Friendly display name → NSE API index name
+    # Index display name -> nse_fetcher API key
     INDEX_DISPLAY_TO_API = {v: k for k, v in DISPLAY_NAMES.items()}
 
     # Nifty Index underlying symbols
@@ -50,7 +50,7 @@ class UniverseManager:
     NIFTY_UNDERLYING_NSE      = "NIFTY"
 
     def __init__(self):
-        self._fetcher = NSEFetcher()
+        pass  # nse_fetcher uses module-level functions, no class instance needed
 
     # ── Equity Universe ────────────────────────────────────────────────────────
 
@@ -74,11 +74,10 @@ class UniverseManager:
 
         api_name = self.INDEX_DISPLAY_TO_API.get(index_display_name)
         if not api_name:
-            # Fallback
             return list(NIFTY_50)
 
         try:
-            tickers = self._fetcher.get_index_constituents(api_name)
+            tickers = _nse_get_universe(api_name)
             if tickers:
                 return tickers
         except Exception:
@@ -109,7 +108,11 @@ class UniverseManager:
 
     def get_index_display_names(self) -> List[str]:
         """All supported index display names for the UI dropdown."""
-        return list(DISPLAY_NAMES.values())
+        try:
+            names = _nse_get_names()
+            return sorted(names) if names else list(DISPLAY_NAMES.values())
+        except Exception:
+            return list(DISPLAY_NAMES.values())
 
     # ── Options Universe (Nifty Index) ─────────────────────────────────────────
 
