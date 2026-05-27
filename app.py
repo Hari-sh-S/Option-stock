@@ -25,7 +25,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Bootstrap: copy Streamlit Secrets → os.environ so all modules can use os.getenv()
+# Bootstrap: copy Streamlit Secrets â†’ os.environ so all modules can use os.getenv()
 # This is a no-op on local (where .env is used instead)
 try:
     from config import bootstrap_env_from_secrets
@@ -34,7 +34,7 @@ except Exception:
     pass
 
 # Show loading indicator immediately for wake-up
-with st.spinner("🔄 App is waking up... Please wait..."):
+with st.spinner("ðŸ”„ App is waking up... Please wait..."):
     pass  # Spinner shows during import time
 
 # Initialize session state for backtest logs
@@ -166,7 +166,7 @@ def get_last_update_time():
     return "Unknown"
 
 last_update = get_last_update_time()
-st.markdown(f"### 📊 Investing Scanner <span style='font-size: 14px; color: #888;'>Updated: {last_update}</span>", unsafe_allow_html=True)
+st.markdown(f"### ðŸ“Š Investing Scanner <span style='font-size: 14px; color: #888;'>Updated: {last_update}</span>", unsafe_allow_html=True)
 
 # Handle Kite OAuth callback at app start (before any tabs)
 if kite_trader.is_kite_configured():
@@ -179,13 +179,13 @@ if kite_trader.is_kite_configured():
     if 'request_token' in query_params:
         request_token = query_params['request_token']
         if kite_trader.handle_kite_callback(request_token):
-            st.success(f"✅ Logged in to Zerodha as: {st.session_state.get('kite_user_name', 'User')}")
+            st.success(f"âœ… Logged in to Zerodha as: {st.session_state.get('kite_user_name', 'User')}")
             st.query_params.clear()
         else:
-            st.error("❌ Zerodha login failed. Please try again.")
+            st.error("âŒ Zerodha login failed. Please try again.")
 
 # Main Tabs
-main_tabs = st.tabs(["Backtest", "Backtest Logs", "Execute Trades", "Data Download", "🔐 Dhan Auth", "🔍 Scanner", "🎯 Options Backtest"])
+main_tabs = st.tabs(["Backtest", "Backtest Logs", "Execute Trades", "Data Download", "ðŸ” Dhan Auth", "ðŸŽ¯ Options Backtest"])
 
 # ==================== TAB 1: BACKTEST ====================
 with main_tabs[0]:
@@ -225,7 +225,7 @@ with main_tabs[0]:
         st.markdown("**Portfolio Settings**")
         cap_col1, cap_col2 = st.columns(2)
         with cap_col1:
-            initial_capital = st.number_input("Capital (₹)", 10000, 100000000, 
+            initial_capital = st.number_input("Capital (â‚¹)", 10000, 100000000, 
                                               loaded_config.get('initial_capital', 100000), 10000)
         with cap_col2:
             num_stocks = st.number_input("Stocks", 1, 50, 
@@ -257,7 +257,7 @@ with main_tabs[0]:
                                              help="Use point-in-time index constituents to avoid survivorship bias")
         
         # ===== TIME PERIOD & REBALANCING (in expander) =====
-        with st.expander("📅 Time Period & Rebalancing", expanded=False):
+        with st.expander("ðŸ“… Time Period & Rebalancing", expanded=False):
             date_col1, date_col2 = st.columns(2)
             with date_col1:
                 # Parse loaded dates if available
@@ -309,7 +309,7 @@ with main_tabs[0]:
                                          help="If rebalance day is holiday, use this option")
         
         # ===== POSITION SIZING (in expander) =====
-        with st.expander("📊 Position Sizing", expanded=False):
+        with st.expander("ðŸ“Š Position Sizing", expanded=False):
             sizing_options = ["Equal Weight", "Inverse Volatility", "Inverse Downside Vol", "Inverse Max Drawdown", "Score-Weighted", "Risk Parity"]
             default_sizing = loaded_config.get('position_sizing_method', 'Equal Weight')
             default_sizing_idx = sizing_options.index(default_sizing) if default_sizing in sizing_options else 0
@@ -343,7 +343,7 @@ with main_tabs[0]:
         }
         
         # ===== REGIME FILTER (in expander) =====
-        with st.expander("🛡️ Regime Filter", expanded=False):
+        with st.expander("ðŸ›¡ï¸ Regime Filter", expanded=False):
             # Get saved regime config if present
             saved_regime = loaded_config.get('regime_config', {}) or {}
             
@@ -384,7 +384,7 @@ with main_tabs[0]:
                 
                 if regime_type in ["SMA_1D", "SMA_1W", "SMA_1M"]:
                     timeframe_labels = {"SMA_1D": "Daily", "SMA_1W": "Weekly", "SMA_1M": "Monthly"}
-                    st.caption(f"📈 SMA on {timeframe_labels[regime_type]} timeframe")
+                    st.caption(f"ðŸ“ˆ SMA on {timeframe_labels[regime_type]} timeframe")
                     sma_options = [20, 50, 100, 150, 200]
                     saved_sma = saved_regime.get('value', 50) if saved_regime.get('type', '').startswith('SMA') else 50
                     if saved_sma not in sma_options:
@@ -395,7 +395,7 @@ with main_tabs[0]:
                     regime_value = sma_period
                 elif regime_type in ["EMA_1D", "EMA_1W", "EMA_1M"]:
                     timeframe_labels = {"EMA_1D": "Daily", "EMA_1W": "Weekly", "EMA_1M": "Monthly"}
-                    st.caption(f"📈 EMA on {timeframe_labels[regime_type]} timeframe")
+                    st.caption(f"ðŸ“ˆ EMA on {timeframe_labels[regime_type]} timeframe")
                     ema_options = [34, 68, 100, 150, 200]
                     saved_ema = saved_regime.get('value', 68) if saved_regime.get('type', '').startswith('EMA') else 68
                     if saved_ema not in ema_options:
@@ -412,7 +412,7 @@ with main_tabs[0]:
                     regime_value = macd_preset
                 elif regime_type in ["SUPERTREND_1D", "SUPERTREND_1W", "SUPERTREND_1M"]:
                     timeframe_labels = {"SUPERTREND_1D": "Daily", "SUPERTREND_1W": "Weekly", "SUPERTREND_1M": "Monthly"}
-                    st.caption(f"📊 SuperTrend on {timeframe_labels[regime_type]} timeframe")
+                    st.caption(f"ðŸ“Š SuperTrend on {timeframe_labels[regime_type]} timeframe")
                     # Period-Multiplier: lower multiplier = more sensitive, higher = smoother
                     st_options = ["7-2", "7-3", "10-2", "10-3"]
                     saved_st = saved_regime.get('value', '7-3') if saved_regime.get('type', '').startswith('SUPERTREND') else '7-3'
@@ -444,7 +444,7 @@ with main_tabs[0]:
                                             help="Reduce exposure when equity falls below this MA")
                     regime_value = ma_period
                 elif regime_type == "DONCHIAN":
-                    st.caption("📈 Turtle Trading: Exit on N-day low, Recovery on M-day high")
+                    st.caption("ðŸ“ˆ Turtle Trading: Exit on N-day low, Recovery on M-day high")
                     don_col1, don_col2 = st.columns(2)
                     with don_col1:
                         exit_options = [40, 50, 55, 60]
@@ -460,7 +460,7 @@ with main_tabs[0]:
                                                        help="Recover when price breaks M-day high")
                     regime_value = exit_period
                 elif regime_type == "SWING_ATR":
-                    st.caption("📊 Swing pivot with ATR buffer to filter noise")
+                    st.caption("ðŸ“Š Swing pivot with ATR buffer to filter noise")
                     swing_col1, swing_col2 = st.columns(2)
                     with swing_col1:
                         saved_swing = saved_regime.get('swing_period', 20) if saved_regime.get('type') == 'SWING_ATR' else 20
@@ -472,7 +472,7 @@ with main_tabs[0]:
                                                      help="ATR multiplier for exit/recovery buffer")
                     regime_value = swing_period
                 elif regime_type == "BREADTH":
-                    st.caption("📉 Market health: % of stocks above 200 SMA")
+                    st.caption("ðŸ“‰ Market health: % of stocks above 200 SMA")
                     saved_threshold = saved_regime.get('breadth_threshold', 60) if saved_regime.get('type') == 'BREADTH' else 60
                     breadth_threshold = st.number_input("Breadth Threshold %", 40, 80, saved_threshold,
                                                         help="Trigger when fewer than X% of stocks above 200 SMA")
@@ -502,14 +502,14 @@ with main_tabs[0]:
                                             index=action_idx,
                                             help="Go Cash: Move to cash | Half Portfolio: Keep 50% stocks | Nifty Put Hedge: Buy NIFTY ATM Puts via Dhan API")
 
-                # ── Nifty Put Hedge sub-settings ────────────────────────────
+                # â”€â”€ Nifty Put Hedge sub-settings â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
                 put_hedge_config = None
                 if regime_action == "Nifty Put Hedge":
                     saved_phc = saved_regime.get('put_hedge_config', {})
                     st.markdown("""
                     <div style='background:rgba(255,165,0,0.1);border-left:3px solid orange;
                                 padding:8px 12px;border-radius:4px;margin:6px 0;'>
-                    🛡️ <b>Nifty Put Hedge</b>: When regime triggers, buys NIFTY ATM <b>Weekly</b> Puts
+                    ðŸ›¡ï¸ <b>Nifty Put Hedge</b>: When regime triggers, buys NIFTY ATM <b>Weekly</b> Puts
                     using delta-neutral sizing. Requires Dhan Data API subscription
                     (falls back to VIX/Black-Scholes when unavailable).
                     Strike: ATM &nbsp;|&nbsp; Expiry: Weekly rolling
@@ -635,7 +635,7 @@ with main_tabs[0]:
                         with col3:
                             st.markdown("<br>", unsafe_allow_html=True)  # Spacing
                             if len(st.session_state.uncorrelated_assets) > 1:
-                                if st.button("🗑️", key=f"remove_unc_{i}"):
+                                if st.button("ðŸ—‘ï¸", key=f"remove_unc_{i}"):
                                     assets_to_remove.append(i)
                     
                     # Remove marked assets
@@ -645,7 +645,7 @@ with main_tabs[0]:
                     
                     # Add asset button
                     if len(st.session_state.uncorrelated_assets) < 4:
-                        if st.button("➕ Add Asset", key="add_unc_asset"):
+                        if st.button("âž• Add Asset", key="add_unc_asset"):
                             # Default new asset with equal split
                             num_assets = len(st.session_state.uncorrelated_assets) + 1
                             default_pct = 100 // num_assets
@@ -655,9 +655,9 @@ with main_tabs[0]:
                     # Show total allocation
                     total_pct = sum(a['pct'] for a in st.session_state.uncorrelated_assets)
                     if total_pct != 100:
-                        st.warning(f"⚠️ Total allocation: {total_pct}% (should sum to 100%)")
+                        st.warning(f"âš ï¸ Total allocation: {total_pct}% (should sum to 100%)")
                     else:
-                        st.success(f"✅ Total allocation: {total_pct}%")
+                        st.success(f"âœ… Total allocation: {total_pct}%")
                     
                     uncorrelated_config = {
                         'assets': [{'ticker': a['ticker'], 'pct': a['pct']} for a in st.session_state.uncorrelated_assets],
@@ -667,7 +667,7 @@ with main_tabs[0]:
                 uncorrelated_config = None
         
         # Risk Management section (within col_config)
-        with st.expander("⚠️ Risk Management", expanded=False):
+        with st.expander("âš ï¸ Risk Management", expanded=False):
             st.caption("Control drawdowns at portfolio and trade level")
             
             # Get saved risk config
@@ -685,7 +685,7 @@ with main_tabs[0]:
             if enable_portfolio_risk:
                 port_cols = st.columns(2)
                 with port_cols[0]:
-                    port_type_options = ["Percentage (%)", "Absolute (₹)"]
+                    port_type_options = ["Percentage (%)", "Absolute (â‚¹)"]
                     saved_port_type = saved_portfolio_risk.get('type', 'percent')
                     port_type_idx = 0 if saved_port_type == 'percent' else 1
                     port_risk_type = st.selectbox("Risk Type", port_type_options, index=port_type_idx, key="port_risk_type")
@@ -695,7 +695,7 @@ with main_tabs[0]:
                         port_risk_value = st.number_input("Risk %", 0.5, 20.0, float(saved_port_val), step=0.5, key="port_risk_val")
                     else:
                         saved_port_val = saved_portfolio_risk.get('value', 5000) if saved_portfolio_risk.get('type') == 'absolute' else 5000
-                        port_risk_value = st.number_input("Risk ₹", 1000, 100000, int(saved_port_val), step=1000, key="port_risk_val")
+                        port_risk_value = st.number_input("Risk â‚¹", 1000, 100000, int(saved_port_val), step=1000, key="port_risk_val")
                 
                 port_action_options = ["Exit all positions", "Exit only loss-making positions"]
                 saved_port_action = saved_portfolio_risk.get('action', 'exit_losers')
@@ -722,7 +722,7 @@ with main_tabs[0]:
             if enable_trade_risk:
                 trade_cols = st.columns(2)
                 with trade_cols[0]:
-                    trade_type_options = ["Percentage (%)", "Absolute (₹)"]
+                    trade_type_options = ["Percentage (%)", "Absolute (â‚¹)"]
                     saved_trade_type = saved_trade_risk.get('type', 'percent')
                     trade_type_idx = 0 if saved_trade_type == 'percent' else 1
                     trade_risk_type = st.selectbox("Risk Type", trade_type_options, index=trade_type_idx, key="trade_risk_type")
@@ -732,7 +732,7 @@ with main_tabs[0]:
                         trade_risk_value = st.number_input("Risk %", 0.5, 20.0, float(saved_trade_val), step=0.5, key="trade_risk_val")
                     else:
                         saved_trade_val = saved_trade_risk.get('value', 5000) if saved_trade_risk.get('type') == 'absolute' else 5000
-                        trade_risk_value = st.number_input("Risk ₹", 1000, 100000, int(saved_trade_val), step=1000, key="trade_risk_val")
+                        trade_risk_value = st.number_input("Risk â‚¹", 1000, 100000, int(saved_trade_val), step=1000, key="trade_risk_val")
                 
                 trade_action_options = ["Exit only breached trade", "Exit all loss-making", "Exit all positions"]
                 saved_trade_action = saved_trade_risk.get('action', 'exit_breached')
@@ -781,13 +781,13 @@ with main_tabs[0]:
         
         valid, msg = parser.validate_formula(formula)
         if valid:
-            st.success("✅ " + msg)
+            st.success("âœ… " + msg)
         else:
-            st.error("❌ " + msg)
+            st.error("âŒ " + msg)
         
         # Compact metrics reference in collapsible expander
-        with st.expander("📖 Available Metrics", expanded=False):
-            st.caption("💡 **Tip:** Use any month (1-24) or week (1-52), e.g. `15 Month Performance`, `2 Week Volatility` or `18 Month Sharpe`")
+        with st.expander("ðŸ“– Available Metrics", expanded=False):
+            st.caption("ðŸ’¡ **Tip:** Use any month (1-24) or week (1-52), e.g. `15 Month Performance`, `2 Week Volatility` or `18 Month Sharpe`")
             
             metric_groups = parser.metric_groups if hasattr(parser, 'metric_groups') else {}
             
@@ -795,25 +795,25 @@ with main_tabs[0]:
             metrics_text = []
             
             perf = metric_groups.get('Performance', ["1 Month Performance", "3 Month Performance", "6 Month Performance", "12 Month Performance"])
-            metrics_text.append("**Performance:** " + " • ".join(perf))
+            metrics_text.append("**Performance:** " + " â€¢ ".join(perf))
             
             vol = metric_groups.get('Volatility', ["1 Month Volatility", "3 Month Volatility", "6 Month Volatility"])
-            metrics_text.append("**Volatility:** " + " • ".join(vol))
+            metrics_text.append("**Volatility:** " + " â€¢ ".join(vol))
             
             dsv = metric_groups.get('Downside Volatility', [])
             if dsv:
-                metrics_text.append("**Downside Vol:** " + " • ".join(dsv))
+                metrics_text.append("**Downside Vol:** " + " â€¢ ".join(dsv))
             
             mdd = metric_groups.get('Max Drawdown', [])
             if mdd:
-                metrics_text.append("**Max Drawdown:** " + " • ".join(mdd))
+                metrics_text.append("**Max Drawdown:** " + " â€¢ ".join(mdd))
             
             sharpe = metric_groups.get('Sharpe Ratio', ["6 Month Sharpe"])
             sortino = metric_groups.get('Sortino Ratio', ["6 Month Sortino"])
             calmar = metric_groups.get('Calmar Ratio', ["6 Month Calmar"])
             risk_adj = sharpe + sortino + calmar
             if risk_adj:
-                metrics_text.append("**Risk-Adjusted:** " + " • ".join(risk_adj))
+                metrics_text.append("**Risk-Adjusted:** " + " â€¢ ".join(risk_adj))
             
             for text in metrics_text:
                 st.markdown(text, unsafe_allow_html=True)
@@ -822,7 +822,7 @@ with main_tabs[0]:
         
         # ===== STRATEGY SAVE/LOAD =====
         if strategy_storage.is_strategy_storage_configured():
-            st.markdown("**💾 Strategy Templates**")
+            st.markdown("**ðŸ’¾ Strategy Templates**")
             
             # Get saved strategies
             saved_strategies = strategy_storage.list_strategies()
@@ -843,14 +843,14 @@ with main_tabs[0]:
                     if loaded_config:
                         st.session_state['loaded_strategy_config'] = loaded_config
                         st.session_state['last_loaded_strategy'] = selected_strategy
-                        st.success(f"✅ Loaded: {selected_strategy}")
+                        st.success(f"âœ… Loaded: {selected_strategy}")
                         st.rerun()
             
             # Save and Delete buttons in columns
             save_col, delete_col = st.columns(2)
             
             with save_col:
-                with st.popover("💾 Save Strategy", use_container_width=True):
+                with st.popover("ðŸ’¾ Save Strategy", use_container_width=True):
                     strategy_name = st.text_input("Strategy Name", key="new_strategy_name")
                     
                     if st.button("Save", key="save_strategy_btn", type="primary"):
@@ -883,14 +883,14 @@ with main_tabs[0]:
                             }
                             
                             if strategy_storage.save_strategy(strategy_name, current_config):
-                                st.success(f"✅ Saved: {strategy_name}")
+                                st.success(f"âœ… Saved: {strategy_name}")
                                 st.rerun()
                         else:
                             st.warning("Enter a strategy name")
             
             with delete_col:
                 if saved_strategies:
-                    with st.popover("🗑️ Delete", use_container_width=True):
+                    with st.popover("ðŸ—‘ï¸ Delete", use_container_width=True):
                         delete_strategy = st.selectbox(
                             "Select to delete",
                             saved_strategies,
@@ -898,13 +898,13 @@ with main_tabs[0]:
                         )
                         if st.button("Delete", key="delete_strategy_btn", type="secondary"):
                             if strategy_storage.delete_strategy(delete_strategy):
-                                st.success(f"✅ Deleted: {delete_strategy}")
+                                st.success(f"âœ… Deleted: {delete_strategy}")
                                 st.session_state['last_loaded_strategy'] = None
                                 st.rerun()
             
             st.markdown("---")
         
-        run_btn = st.button("🚀 Run Backtest", type="primary", use_container_width=True)
+        run_btn = st.button("ðŸš€ Run Backtest", type="primary", use_container_width=True)
     
     # Results Section
     if run_btn:
@@ -943,12 +943,12 @@ with main_tabs[0]:
                 pct = (processed_count[0] / total * 100) if total > 0 else 0
                 status_container.markdown(f"""
                 <div style="padding: 10px; background: rgba(0,0,0,0.1); border-radius: 5px;">
-                    <div style="font-size: 16px; font-weight: bold;">📊 {ticker}</div>
+                    <div style="font-size: 16px; font-weight: bold;">ðŸ“Š {ticker}</div>
                     <div style="margin-top: 5px;">
                         Progress: {processed_count[0]}/{total} ({pct:.1f}%)
                     </div>
                     <div style="margin-top: 5px;">
-                        ⏱️ Remaining: {time_str} | ⏰ Elapsed: {elapsed_mins:02d}:{elapsed_secs:02d}
+                        â±ï¸ Remaining: {time_str} | â° Elapsed: {elapsed_mins:02d}:{elapsed_secs:02d}
                     </div>
                 </div>
                 """, unsafe_allow_html=True)
@@ -1072,7 +1072,7 @@ with main_tabs[0]:
                                         'monthly_returns': m_returns.tolist()
                                     }
                                 else:
-                                    st.warning(f"Need ≥6 months for MC. Have {len(m_returns)} months.")
+                                    st.warning(f"Need â‰¥6 months for MC. Have {len(m_returns)} months.")
                             except Exception as e:
                                 st.error(f"MC Calculation Error: {e}")
                                 mc_results = None
@@ -1118,7 +1118,7 @@ with main_tabs[0]:
                                 regime_data=equity_analysis
                             )
                             st.download_button(
-                                label="📥 Excel",
+                                label="ðŸ“¥ Excel",
                                 data=excel_data,
                                 file_name=f"backtest_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx",
                                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
@@ -1130,7 +1130,7 @@ with main_tabs[0]:
                                 regime_data=equity_analysis
                             )
                             st.download_button(
-                                label="📄 PDF",
+                                label="ðŸ“„ PDF",
                                 data=pdf_data,
                                 file_name=f"backtest_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf",
                                 mime="application/pdf"
@@ -1172,8 +1172,8 @@ with main_tabs[0]:
                             
                             kpi_col1, kpi_col2, kpi_col3, kpi_col4 = st.columns(4)
                             
-                            kpi_col1.metric("Final Value", f"₹{metrics['Final Value']:,.0f}")
-                            kpi_col1.metric("Total Return", f"₹{metrics['Total Return']:,.0f}")
+                            kpi_col1.metric("Final Value", f"â‚¹{metrics['Final Value']:,.0f}")
+                            kpi_col1.metric("Total Return", f"â‚¹{metrics['Total Return']:,.0f}")
                             kpi_col1.metric("Return %", f"{metrics['Return %']:.2f}%")
                             
                             kpi_col2.metric("CAGR %", f"{metrics['CAGR %']:.2f}%")
@@ -1185,28 +1185,28 @@ with main_tabs[0]:
                             kpi_col3.metric("Total Trades", metrics['Total Trades'])
                             
                             kpi_col4.metric("Avg Trade/Year", f"{metrics['Total Trades'] / max(1, (end_date - start_date).days / 365.25):.1f}")
-                            kpi_col4.metric("Expectancy", f"₹{metrics.get('Expectancy', 0):,.0f}")
+                            kpi_col4.metric("Expectancy", f"â‚¹{metrics.get('Expectancy', 0):,.0f}")
                             
                             # Additional Metrics Row
                             st.markdown("---")
-                            st.markdown("**📊 Advanced Metrics**")
+                            st.markdown("**ðŸ“Š Advanced Metrics**")
                             adv_col1, adv_col2, adv_col3, adv_col4 = st.columns(4)
                             
                             adv_col1.metric("Max Consecutive Wins", metrics.get('Max Consecutive Wins', 0))
                             adv_col1.metric("Max Consecutive Losses", metrics.get('Max Consecutive Losses', 0))
                             
-                            adv_col2.metric("Avg Win", f"₹{metrics.get('Avg Win', 0):,.0f}")
-                            adv_col2.metric("Avg Loss", f"₹{metrics.get('Avg Loss', 0):,.0f}")
+                            adv_col2.metric("Avg Win", f"â‚¹{metrics.get('Avg Win', 0):,.0f}")
+                            adv_col2.metric("Avg Loss", f"â‚¹{metrics.get('Avg Loss', 0):,.0f}")
                             
                             adv_col3.metric("Days to Recover from DD", metrics.get('Days to Recover from DD', 0))
                             adv_col3.metric("Trades to Recover from DD", metrics.get('Trades to Recover from DD', 0))
                             
-                            adv_col4.metric("Total Turnover", f"₹{metrics.get('Total Turnover', 0):,.0f}")
-                            adv_col4.metric("Consolidated Charges", f"₹{metrics.get('Total Charges', 0):,.0f}")
+                            adv_col4.metric("Total Turnover", f"â‚¹{metrics.get('Total Turnover', 0):,.0f}")
+                            adv_col4.metric("Consolidated Charges", f"â‚¹{metrics.get('Total Charges', 0):,.0f}")
                             
                             # Risk Metrics Row
                             st.markdown("---")
-                            st.markdown("**⚠️ Risk Analysis**")
+                            st.markdown("**âš ï¸ Risk Analysis**")
                             risk_col1, risk_col2, risk_col3, risk_col4 = st.columns(4)
                             
                             risk_col1.metric("Median MAE", f"{metrics.get('MAE Median %', 0):.2f}%", help="Typical worst unrealized loss during a trade")
@@ -1215,22 +1215,22 @@ with main_tabs[0]:
                             risk_col4.metric("CVaR (5%)", f"{metrics.get('CVaR 5% %', 0):.2f}%", help="Average loss of the worst 5% of trades (Expected Shortfall)")
                             
                             # Charges Breakdown Expander
-                            with st.expander("📋 Zerodha Charges Breakdown"):
+                            with st.expander("ðŸ“‹ Zerodha Charges Breakdown"):
                                 charges_col1, charges_col2 = st.columns(2)
-                                charges_col1.write(f"**STT/CTT (0.1%):** ₹{metrics.get('STT/CTT', 0):,.2f}")
-                                charges_col1.write(f"**Transaction Charges:** ₹{metrics.get('Transaction Charges', 0):,.2f}")
-                                charges_col1.write(f"**SEBI Charges:** ₹{metrics.get('SEBI Charges', 0):,.2f}")
-                                charges_col2.write(f"**Stamp Charges (0.015%):** ₹{metrics.get('Stamp Charges', 0):,.2f}")
-                                charges_col2.write(f"**GST (18%):** ₹{metrics.get('GST', 0):,.2f}")
-                                charges_col2.write(f"**Total Charges:** ₹{metrics.get('Total Charges', 0):,.2f}")
+                                charges_col1.write(f"**STT/CTT (0.1%):** â‚¹{metrics.get('STT/CTT', 0):,.2f}")
+                                charges_col1.write(f"**Transaction Charges:** â‚¹{metrics.get('Transaction Charges', 0):,.2f}")
+                                charges_col1.write(f"**SEBI Charges:** â‚¹{metrics.get('SEBI Charges', 0):,.2f}")
+                                charges_col2.write(f"**Stamp Charges (0.015%):** â‚¹{metrics.get('Stamp Charges', 0):,.2f}")
+                                charges_col2.write(f"**GST (18%):** â‚¹{metrics.get('GST', 0):,.2f}")
+                                charges_col2.write(f"**Total Charges:** â‚¹{metrics.get('Total Charges', 0):,.2f}")
 
-                            # ── Put Hedge Analysis (only shown when Nifty Put Hedge regime was used) ──
+                            # â”€â”€ Put Hedge Analysis (only shown when Nifty Put Hedge regime was used) â”€â”€
                             if metrics.get('Hedge Events', 0) > 0:
                                 st.markdown("---")
                                 st.markdown("""
                                 <div style='background:rgba(255,165,0,0.12);border-left:4px solid orange;
                                             padding:10px 16px;border-radius:6px;margin-bottom:10px;'>
-                                🛡️ <b>Nifty Put Hedge Analysis</b>
+                                ðŸ›¡ï¸ <b>Nifty Put Hedge Analysis</b>
                                 </div>
                                 """, unsafe_allow_html=True)
 
@@ -1242,18 +1242,18 @@ with main_tabs[0]:
                                 )
                                 hcol2.metric(
                                     "Hedge Cost",
-                                    f"₹{metrics.get('Hedge Cost Total', 0):,.0f}",
+                                    f"â‚¹{metrics.get('Hedge Cost Total', 0):,.0f}",
                                     help="Total premium paid for put options"
                                 )
                                 hcol3.metric(
                                     "Hedge Proceeds",
-                                    f"₹{metrics.get('Hedge Proceeds Total', 0):,.0f}",
+                                    f"â‚¹{metrics.get('Hedge Proceeds Total', 0):,.0f}",
                                     help="Total proceeds from closing put positions"
                                 )
                                 hedge_pnl = metrics.get('Hedge Net PnL', 0)
                                 hcol4.metric(
                                     "Hedge Net P&L",
-                                    f"₹{hedge_pnl:,.0f}",
+                                    f"â‚¹{hedge_pnl:,.0f}",
                                     delta=f"{hedge_pnl:,.0f}",
                                     delta_color="normal",
                                     help="Net profit/loss from all put hedge positions"
@@ -1261,7 +1261,7 @@ with main_tabs[0]:
                                 hcol5.metric(
                                     "Hedge Efficiency",
                                     f"{metrics.get('Hedge Efficiency %', 0):.1f}%",
-                                    help="(Proceeds - Cost) / Cost × 100"
+                                    help="(Proceeds - Cost) / Cost Ã— 100"
                                 )
 
                             # Original download buttons removed (consolidated above)
@@ -1280,7 +1280,7 @@ with main_tabs[0]:
                             fig_equity.update_layout(
                                 title="Equity Curve",
                                 xaxis_title="Date",
-                                yaxis_title="Portfolio Value (₹)",
+                                yaxis_title="Portfolio Value (â‚¹)",
                                 height=400,
                                 margin=dict(l=0,r=0,t=40,b=0),
                                 showlegend=False,
@@ -1464,7 +1464,7 @@ with main_tabs[0]:
                                             'Current Price': round(current_price, 2),
                                             'Shares': shares,
                                             'Unrealized ROI %': round(unrealized_roi, 2),
-                                            'Status': '🟢 OPEN'
+                                            'Status': 'ðŸŸ¢ OPEN'
                                         })
                                 
                                 if open_positions:
@@ -1473,7 +1473,7 @@ with main_tabs[0]:
                                     st.session_state['engine_data'] = engine.data
                                     
                                     st.markdown("---")
-                                    st.markdown("### 📈 Open Positions (Current Holdings)")
+                                    st.markdown("### ðŸ“ˆ Open Positions (Current Holdings)")
                                     st.caption("These are positions bought but not yet sold at the end of the backtest period. Go to **Execute Trades** tab to place orders.")
                                     
                                     open_df = pd.DataFrame(open_positions)
@@ -1491,21 +1491,21 @@ with main_tabs[0]:
                                     st.dataframe(styled_open, use_container_width=True)
                                     
                                     # Prompt to use Execute Trades tab
-                                    st.info("👉 Go to the **Execute Trades** tab to place orders on Zerodha with these positions.")
+                                    st.info("ðŸ‘‰ Go to the **Execute Trades** tab to place orders on Zerodha with these positions.")
                             else:
                                 st.info("No trades executed")
                         
                         # Monte Carlo Analysis Tab (index 5 - always present)
                         with result_tabs[5]:
-                            st.markdown("### 🎲 Monte Carlo Analysis")
+                            st.markdown("### ðŸŽ² Monte Carlo Analysis")
                             
                             # Determine MC type based on position sizing method
                             use_trade_level = position_sizing_method == "Equal Weight"
                             
                             if use_trade_level:
-                                st.caption("**Trade-Level MC** — Valid for equal-weight portfolios where each trade is independent")
+                                st.caption("**Trade-Level MC** â€” Valid for equal-weight portfolios where each trade is independent")
                             else:
-                                st.caption("**Portfolio-Level MC** — Monthly returns shuffling for vol-weighted portfolios")
+                                st.caption("**Portfolio-Level MC** â€” Monthly returns shuffling for vol-weighted portfolios")
                             
                             if not engine.trades_df.empty:
                                 # Calculate test duration
@@ -1530,7 +1530,7 @@ with main_tabs[0]:
                                             results_resample = mc.run_simulations(method='resample')
                                             interp_resample = mc.get_interpretation()
                                         
-                                        st.success(f"✅ Trade-Level MC completed: **10,000 simulations** using {len(trade_pnls)} trades over {years:.1f} years")
+                                        st.success(f"âœ… Trade-Level MC completed: **10,000 simulations** using {len(trade_pnls)} trades over {years:.1f} years")
                                     else:
                                         st.warning(f"Need at least 10 completed trades for Monte Carlo analysis. Currently have {len(trade_pnls)} trades.")
                                         results_reshuffle = results_resample = None
@@ -1582,7 +1582,7 @@ with main_tabs[0]:
                                             results_resample = mc.run_simulations(method='resample')
                                             interp_resample = mc.get_interpretation()
                                         
-                                        st.success(f"✅ Portfolio-Level MC completed: **10,000 simulations** using {len(monthly_returns)} monthly returns over {years:.1f} years")
+                                        st.success(f"âœ… Portfolio-Level MC completed: **10,000 simulations** using {len(monthly_returns)} monthly returns over {years:.1f} years")
                                     else:
                                         st.warning(f"Need at least 6 months of data for Portfolio Monte Carlo. Currently have {len(monthly_returns)} months.")
                                         results_reshuffle = results_resample = None
@@ -1691,7 +1691,7 @@ with main_tabs[0]:
                                     
                                     # Comparison insight
                                     st.markdown("---")
-                                    st.info("💡 **Comparison:** Reshuffling shows risk assuming the *exact same set* of trades occur in different orders. Resampling (Bootstrap) simulates risk assuming the market conditions could generate *more* of the losing trades or *fewer* of the winning trades, typically showing a wider range of outcomes and risks.")
+                                    st.info("ðŸ’¡ **Comparison:** Reshuffling shows risk assuming the *exact same set* of trades occur in different orders. Resampling (Bootstrap) simulates risk assuming the market conditions could generate *more* of the losing trades or *fewer* of the winning trades, typically showing a wider range of outcomes and risks.")
 
                                 else:
                                     st.warning(f"Need at least 10 completed trades for Monte Carlo analysis. Currently have {len(trade_pnls)} trades.")
@@ -1702,8 +1702,8 @@ with main_tabs[0]:
                         if is_equity and equity_analysis:
                             equity_tab_idx = 6  # Base 6 tabs (0-5), this is index 6
                             with result_tabs[equity_tab_idx]:
-                                st.markdown("### 📊 Equity Regime Testing")
-                                st.warning("⚠️ **DISCLAIMER**: This section is for testing purposes only. The theoretical curve shows what would have happened WITHOUT the EQUITY regime filter.")
+                                st.markdown("### ðŸ“Š Equity Regime Testing")
+                                st.warning("âš ï¸ **DISCLAIMER**: This section is for testing purposes only. The theoretical curve shows what would have happened WITHOUT the EQUITY regime filter.")
                                 
                                 st.markdown(f"**Stop-Loss Threshold:** {equity_analysis['sl_threshold']}%")
                                 
@@ -1715,10 +1715,10 @@ with main_tabs[0]:
                                     for event in trigger_events:
                                         events_data.append({
                                             'Date': event['date'].strftime('%Y-%m-%d'),
-                                            'Event': '🔴 TRIGGERED' if event['type'] == 'trigger' else '🟢 RECOVERED',
+                                            'Event': 'ðŸ”´ TRIGGERED' if event['type'] == 'trigger' else 'ðŸŸ¢ RECOVERED',
                                             'Drawdown %': f"{event['drawdown']:.2f}%",
-                                            'Peak Equity': f"₹{event['peak']:,.0f}",
-                                            'Current Equity': f"₹{event['current']:,.0f}"
+                                            'Peak Equity': f"â‚¹{event['peak']:,.0f}",
+                                            'Current Equity': f"â‚¹{event['current']:,.0f}"
                                         })
                                     st.dataframe(pd.DataFrame(events_data), use_container_width=True)
                                 else:
@@ -1746,7 +1746,7 @@ with main_tabs[0]:
                                     fig_compare.update_layout(
                                         title="Actual vs Theoretical Equity Curve",
                                         xaxis_title="Date",
-                                        yaxis_title="Portfolio Value (₹)",
+                                        yaxis_title="Portfolio Value (â‚¹)",
                                         height=450,
                                         template='plotly_dark'
                                     )
@@ -1759,8 +1759,8 @@ with main_tabs[0]:
                                     theoretical_return = ((theoretical_final / engine.initial_capital) - 1) * 100
                                     
                                     comp_col1, comp_col2, comp_col3 = st.columns(3)
-                                    comp_col1.metric("Actual Final Value", f"₹{actual_final:,.0f}")
-                                    comp_col2.metric("Theoretical Final Value", f"₹{theoretical_final:,.0f}")
+                                    comp_col1.metric("Actual Final Value", f"â‚¹{actual_final:,.0f}")
+                                    comp_col2.metric("Theoretical Final Value", f"â‚¹{theoretical_final:,.0f}")
                                     
                                     diff = actual_return - theoretical_return
                                     if diff > 0:
@@ -1811,7 +1811,7 @@ with main_tabs[0]:
                                     fig_peak.update_layout(
                                         title="Portfolio Value vs Peak Equity with SL Threshold",
                                         xaxis_title="Date",
-                                        yaxis_title="Value (₹)",
+                                        yaxis_title="Value (â‚¹)",
                                         height=450,
                                         template='plotly_dark'
                                     )
@@ -1856,7 +1856,7 @@ with main_tabs[0]:
                                 equity_ma_tab_idx = len(tab_names) - 1  # Still last if both exist
                             
                             with result_tabs[equity_ma_tab_idx]:
-                                st.markdown("### 📈 Equity Curve MA Analysis")
+                                st.markdown("### ðŸ“ˆ Equity Curve MA Analysis")
                                 st.markdown("> **Meta-Strategy:** Reduce exposure when portfolio equity falls below its moving average")
                                 
                                 ma_period = regime_config.get('ma_period', 50)
@@ -1902,7 +1902,7 @@ with main_tabs[0]:
                                     fig_ma.update_layout(
                                         title=f"Portfolio Equity vs {ma_period}-Day Moving Average",
                                         xaxis_title="Date",
-                                        yaxis_title="Value (₹)",
+                                        yaxis_title="Value (â‚¹)",
                                         height=450,
                                         template='plotly_dark',
                                         legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
@@ -1911,7 +1911,7 @@ with main_tabs[0]:
                                     
                                     # Statistics
                                     st.markdown("---")
-                                    st.markdown("### 📊 MA Filter Statistics")
+                                    st.markdown("### ðŸ“Š MA Filter Statistics")
                                     
                                     if 'Equity_MA_Triggered' in engine.portfolio_df.columns:
                                         total_days = len(engine.portfolio_df)
@@ -1925,7 +1925,7 @@ with main_tabs[0]:
                                     
                                     # Theoretical vs Actual Comparison
                                     st.markdown("---")
-                                    st.markdown("### 📈 Theoretical vs Actual Equity Curve")
+                                    st.markdown("### ðŸ“ˆ Theoretical vs Actual Equity Curve")
                                     st.markdown("> Compare your actual returns (with MA filter) against theoretical returns (without filter)")
                                     
                                     # Get theoretical data from equity_analysis
@@ -1953,7 +1953,7 @@ with main_tabs[0]:
                                         fig_compare.update_layout(
                                             title="Actual vs Theoretical Equity Curve",
                                             xaxis_title="Date",
-                                            yaxis_title="Portfolio Value (₹)",
+                                            yaxis_title="Portfolio Value (â‚¹)",
                                             height=450,
                                             template='plotly_dark',
                                             legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
@@ -1967,8 +1967,8 @@ with main_tabs[0]:
                                         theoretical_return = ((theoretical_final / engine.initial_capital) - 1) * 100
                                         
                                         comp_col1, comp_col2, comp_col3 = st.columns(3)
-                                        comp_col1.metric("Actual Final Value", f"₹{actual_final:,.0f}")
-                                        comp_col2.metric("Theoretical Final Value", f"₹{theoretical_final:,.0f}")
+                                        comp_col1.metric("Actual Final Value", f"â‚¹{actual_final:,.0f}")
+                                        comp_col2.metric("Theoretical Final Value", f"â‚¹{theoretical_final:,.0f}")
                                         
                                         diff = actual_return - theoretical_return
                                         if diff > 0:
@@ -1988,7 +1988,7 @@ with main_tabs[0]:
                                 regime_type = equity_analysis.get('regime_type', 'Unknown')
                                 regime_value = equity_analysis.get('regime_value', '')
                                 
-                                st.markdown(f"### 📊 {regime_type} Regime Filter Analysis")
+                                st.markdown(f"### ðŸ“Š {regime_type} Regime Filter Analysis")
                                 st.markdown(f"> Compare your actual returns (with {regime_type} filter) against theoretical returns (without filter)")
                                 
                                 if 'theoretical_curve' in equity_analysis:
@@ -1996,7 +1996,7 @@ with main_tabs[0]:
                                     
                                     # Comparison Chart
                                     st.markdown("---")
-                                    st.markdown("### 📈 Actual vs Theoretical Equity Curve")
+                                    st.markdown("### ðŸ“ˆ Actual vs Theoretical Equity Curve")
                                     
                                     fig_compare = go.Figure()
                                     
@@ -2019,7 +2019,7 @@ with main_tabs[0]:
                                     fig_compare.update_layout(
                                         title=f"Equity Curve: With vs Without {regime_type} Filter",
                                         xaxis_title="Date",
-                                        yaxis_title="Portfolio Value (₹)",
+                                        yaxis_title="Portfolio Value (â‚¹)",
                                         height=450,
                                         template='plotly_dark',
                                         legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
@@ -2028,7 +2028,7 @@ with main_tabs[0]:
                                     
                                     # Calculate comprehensive metrics for both
                                     st.markdown("---")
-                                    st.markdown("### 📋 Metrics Comparison (Before vs After Filter)")
+                                    st.markdown("### ðŸ“‹ Metrics Comparison (Before vs After Filter)")
                                     
                                     # === ACTUAL METRICS - Use engine.get_metrics() to match Performance tab ===
                                     actual_metrics = metrics  # Already calculated from engine.get_metrics()
@@ -2146,55 +2146,55 @@ with main_tabs[0]:
                                             'Max Consecutive Losses', 'Avg Win', 'Avg Loss', 'Days to Recover'
                                         ],
                                         'Without Filter': [
-                                            f"₹{theoretical_final:,.0f}",
+                                            f"â‚¹{theoretical_final:,.0f}",
                                             f"{theoretical_return_pct:.2f}%",
                                             f"{theoretical_cagr:.2f}%",
                                             f"{theoretical_max_dd:.2f}%",
                                             f"{theoretical_volatility:.2f}%",
                                             f"{theoretical_sharpe:.2f}",
                                             f"{theoretical_win_rate:.2f}%",
-                                            f"₹{theoretical_expectancy:,.0f}",
+                                            f"â‚¹{theoretical_expectancy:,.0f}",
                                             f"{theoretical_total_trades}",
                                             f"{theoretical_trades_per_year:.1f}",
                                             f"{theoretical_max_wins}",
                                             f"{theoretical_max_losses}",
-                                            f"₹{theoretical_avg_win:,.0f}",
-                                            f"₹{theoretical_avg_loss:,.0f}",
+                                            f"â‚¹{theoretical_avg_win:,.0f}",
+                                            f"â‚¹{theoretical_avg_loss:,.0f}",
                                             f"{theoretical_days_to_recover}"
                                         ],
                                         'With Filter': [
-                                            f"₹{actual_final:,.0f}",
+                                            f"â‚¹{actual_final:,.0f}",
                                             f"{actual_return_pct:.2f}%",
                                             f"{actual_cagr:.2f}%",
                                             f"{actual_max_dd:.2f}%",
                                             f"{actual_volatility:.2f}%",
                                             f"{actual_sharpe:.2f}",
                                             f"{actual_win_rate:.2f}%",
-                                            f"₹{actual_expectancy:,.0f}",
+                                            f"â‚¹{actual_expectancy:,.0f}",
                                             f"{actual_total_trades}",
                                             f"{actual_trades_per_year:.1f}",
                                             f"{actual_max_wins}",
                                             f"{actual_max_losses}",
-                                            f"₹{actual_avg_win:,.0f}",
-                                            f"₹{actual_avg_loss:,.0f}",
+                                            f"â‚¹{actual_avg_win:,.0f}",
+                                            f"â‚¹{actual_avg_loss:,.0f}",
                                             f"{actual_days_to_recover}"
                                         ],
                                         'Better?': [
-                                            '✅' if actual_final >= theoretical_final else '❌',
-                                            '✅' if actual_return_pct >= theoretical_return_pct else '❌',
-                                            '✅' if actual_cagr >= theoretical_cagr else '❌',
-                                            '✅' if actual_max_dd <= theoretical_max_dd else '❌',
-                                            '✅' if actual_volatility <= theoretical_volatility else '❌',
-                                            '✅' if actual_sharpe >= theoretical_sharpe else '❌',
-                                            '✅' if actual_win_rate >= theoretical_win_rate else '❌',
-                                            '✅' if actual_expectancy >= theoretical_expectancy else '❌',
-                                            '➖',  # Total trades neutral
-                                            '➖',  # Avg trades/year neutral
-                                            '✅' if actual_max_wins >= theoretical_max_wins else '❌',
-                                            '✅' if actual_max_losses <= theoretical_max_losses else '❌',
-                                            '✅' if actual_avg_win >= theoretical_avg_win else '❌',
-                                            '✅' if actual_avg_loss <= theoretical_avg_loss else '❌',
-                                            '✅' if actual_days_to_recover <= theoretical_days_to_recover else '❌'
+                                            'âœ…' if actual_final >= theoretical_final else 'âŒ',
+                                            'âœ…' if actual_return_pct >= theoretical_return_pct else 'âŒ',
+                                            'âœ…' if actual_cagr >= theoretical_cagr else 'âŒ',
+                                            'âœ…' if actual_max_dd <= theoretical_max_dd else 'âŒ',
+                                            'âœ…' if actual_volatility <= theoretical_volatility else 'âŒ',
+                                            'âœ…' if actual_sharpe >= theoretical_sharpe else 'âŒ',
+                                            'âœ…' if actual_win_rate >= theoretical_win_rate else 'âŒ',
+                                            'âœ…' if actual_expectancy >= theoretical_expectancy else 'âŒ',
+                                            'âž–',  # Total trades neutral
+                                            'âž–',  # Avg trades/year neutral
+                                            'âœ…' if actual_max_wins >= theoretical_max_wins else 'âŒ',
+                                            'âœ…' if actual_max_losses <= theoretical_max_losses else 'âŒ',
+                                            'âœ…' if actual_avg_win >= theoretical_avg_win else 'âŒ',
+                                            'âœ…' if actual_avg_loss <= theoretical_avg_loss else 'âŒ',
+                                            'âœ…' if actual_days_to_recover <= theoretical_days_to_recover else 'âŒ'
                                         ]
                                     }
                                     
@@ -2203,7 +2203,7 @@ with main_tabs[0]:
                                     
                                     # Summary metrics with color
                                     st.markdown("---")
-                                    st.markdown("### 🎯 Filter Impact Summary")
+                                    st.markdown("### ðŸŽ¯ Filter Impact Summary")
                                     
                                     sum_col1, sum_col2, sum_col3, sum_col4 = st.columns(4)
                                     
@@ -2238,11 +2238,11 @@ with main_tabs[0]:
                                     ])
                                     
                                     if improvements >= 2 and return_diff >= -5:
-                                        st.success(f"✅ **{regime_type} filter improved risk-adjusted returns.** Lower drawdown/volatility with acceptable return trade-off.")
+                                        st.success(f"âœ… **{regime_type} filter improved risk-adjusted returns.** Lower drawdown/volatility with acceptable return trade-off.")
                                     elif return_diff > 0:
-                                        st.success(f"✅ **{regime_type} filter improved absolute returns.** Higher returns than without filter.")
+                                        st.success(f"âœ… **{regime_type} filter improved absolute returns.** Higher returns than without filter.")
                                     else:
-                                        st.warning(f"⚠️ **{regime_type} filter reduced returns by {abs(return_diff):.2f}%.** The filter was protective but cost performance in this period.")
+                                        st.warning(f"âš ï¸ **{regime_type} filter reduced returns by {abs(return_diff):.2f}%.** The filter was protective but cost performance in this period.")
                     else:
                         st.warning("No trades generated")
                 else:
@@ -2251,7 +2251,7 @@ with main_tabs[0]:
     # STANDALONE BENCHMARK COMPARISON - Persists across reruns using session_state
     if st.session_state.get('current_backtest_active') and 'current_backtest' in st.session_state:
         st.markdown("---")
-        st.subheader("📊 Benchmark Comparison")
+        st.subheader("ðŸ“Š Benchmark Comparison")
         
         stored_data = st.session_state['current_backtest']
         stored_engine = stored_data['engine']
@@ -2363,9 +2363,9 @@ with main_tabs[0]:
                 
                 alpha = portfolio_norm.iloc[-1] - benchmark_norm.iloc[-1]
                 if alpha > 0:
-                    st.success(f"🎯 **Alpha Generated: +{alpha:.1f}%**")
+                    st.success(f"ðŸŽ¯ **Alpha Generated: +{alpha:.1f}%**")
                 else:
-                    st.warning(f"📉 **Alpha: {alpha:.1f}%**")
+                    st.warning(f"ðŸ“‰ **Alpha: {alpha:.1f}%**")
             else:
                 st.warning(f"Could not fetch data for {selected_benchmark}")
         except Exception as e:
@@ -2382,27 +2382,27 @@ with main_tabs[1]:
         
         # Display logs in reverse chronological order
         for idx, log in enumerate(reversed(st.session_state.backtest_logs)):
-            with st.expander(f"📊 {log['name']} - {log['timestamp']}"):
+            with st.expander(f"ðŸ“Š {log['name']} - {log['timestamp']}"):
                 st.markdown(f"**Universe:** {log['config']['universe_name']}")
                 st.markdown(f"**Period:** {log['config']['start_date']} to {log['config']['end_date']}")
                 st.markdown(f"**Formula:** `{log['config']['formula']}`")
                 
                 # Key metrics - display vertically to avoid nested columns
                 metrics = log['metrics']
-                st.markdown(f"**Final Value:** ₹{metrics['Final Value']:,.0f} | **CAGR:** {metrics['CAGR %']:.2f}% | **Sharpe:** {metrics['Sharpe Ratio']:.2f} | **Win Rate:** {metrics['Win Rate %']:.1f}%")
+                st.markdown(f"**Final Value:** â‚¹{metrics['Final Value']:,.0f} | **CAGR:** {metrics['CAGR %']:.2f}% | **Sharpe:** {metrics['Sharpe Ratio']:.2f} | **Win Rate:** {metrics['Win Rate %']:.1f}%")
                 
                 # Show additional log info if available
                 if log.get('trades'):
-                    st.caption(f"📈 {len(log['trades'])} trades recorded")
+                    st.caption(f"ðŸ“ˆ {len(log['trades'])} trades recorded")
                 if log.get('portfolio_values'):
-                    st.caption(f"📊 {len(log['portfolio_values'])} daily values stored")
+                    st.caption(f"ðŸ“Š {len(log['portfolio_values'])} daily values stored")
                 
                 # Download buttons - Excel and PDF
                 dl_col1, dl_col2 = st.columns(2)
                 with dl_col1:
                     excel_data = create_excel_with_charts(log['config'], metrics)
                     st.download_button(
-                        label="📥 Download Excel",
+                        label="ðŸ“¥ Download Excel",
                         data=excel_data,
                         file_name=f"{log['name']}.xlsx",
                         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -2411,7 +2411,7 @@ with main_tabs[1]:
                 with dl_col2:
                     pdf_data = create_pdf_report(log['config'], metrics)
                     st.download_button(
-                        label="📄 Download PDF",
+                        label="ðŸ“„ Download PDF",
                         data=pdf_data,
                         file_name=f"{log['name']}.pdf",
                         mime="application/pdf",
@@ -2419,7 +2419,7 @@ with main_tabs[1]:
                     )
         
         # Clear all logs button
-        if st.button("🗑️ Clear All Logs"):
+        if st.button("ðŸ—‘ï¸ Clear All Logs"):
             st.session_state.backtest_logs = []
             st.session_state.backtest_engines = {}
             save_backtest_logs([])  # Save empty list to file
@@ -2427,7 +2427,7 @@ with main_tabs[1]:
 
 # ==================== TAB 3: EXECUTE TRADES ====================
 with main_tabs[2]:
-    st.subheader("🚀 Execute Trades on Zerodha")
+    st.subheader("ðŸš€ Execute Trades on Zerodha")
     st.markdown("Execute strategy positions live or paper trade from saved strategy templates.")
     
     # Check if Kite is configured
@@ -2451,13 +2451,13 @@ with main_tabs[2]:
         auth_col1, auth_col2 = st.columns([2, 1])
         with auth_col1:
             if is_authenticated:
-                st.success(f"✅ Connected to Zerodha as: **{st.session_state.get('kite_user_name', 'User')}**")
+                st.success(f"âœ… Connected to Zerodha as: **{st.session_state.get('kite_user_name', 'User')}**")
             else:
-                st.warning("⚠️ Not logged in to Zerodha. Click below to authenticate.")
+                st.warning("âš ï¸ Not logged in to Zerodha. Click below to authenticate.")
         
         with auth_col2:
             if is_authenticated:
-                if st.button("🚪 Logout", key="kite_logout_main", use_container_width=True):
+                if st.button("ðŸšª Logout", key="kite_logout_main", use_container_width=True):
                     kite_trader.clear_kite_token_from_hf()
                     st.session_state.kite_access_token = None
                     st.session_state.kite_user_id = None
@@ -2465,27 +2465,27 @@ with main_tabs[2]:
                     st.rerun()
             else:
                 login_url = kite_trader.get_login_url()
-                st.link_button("🔐 Login to Zerodha", login_url, type="primary", use_container_width=True)
+                st.link_button("ðŸ” Login to Zerodha", login_url, type="primary", use_container_width=True)
         
         st.markdown("---")
         
         # Strategy Mode Selector
         strategy_mode = st.radio(
             "Select Mode",
-            ["📈 New Strategy", "📊 View Past Executions"],
+            ["ðŸ“ˆ New Strategy", "ðŸ“Š View Past Executions"],
             horizontal=True,
             key="exec_strategy_mode"
         )
         
         # ==================== NEW STRATEGY ====================
-        if strategy_mode == "📈 New Strategy":
-            st.markdown("### 📈 Execute New Strategy")
+        if strategy_mode == "ðŸ“ˆ New Strategy":
+            st.markdown("### ðŸ“ˆ Execute New Strategy")
             
             # Get saved strategy templates
             saved_strategies = strategy_storage.list_strategies() if strategy_storage.is_strategy_storage_configured() else []
             
             if not saved_strategies:
-                st.info("📋 No saved strategy templates. Go to **Backtest** tab and save a strategy first.")
+                st.info("ðŸ“‹ No saved strategy templates. Go to **Backtest** tab and save a strategy first.")
             else:
                 # Strategy selection
                 col1, col2 = st.columns([1, 1])
@@ -2510,7 +2510,7 @@ with main_tabs[2]:
                 
                 with cap_col:
                     exec_capital = st.number_input(
-                        "Capital to Deploy (₹)",
+                        "Capital to Deploy (â‚¹)",
                         min_value=10000,
                         max_value=10000000,
                         value=100000,
@@ -2522,7 +2522,7 @@ with main_tabs[2]:
                     st.write("")
                     st.write("")
                     run_backtest_clicked = st.button(
-                        "🔄 Run Backtest",
+                        "ðŸ”„ Run Backtest",
                         type="secondary",
                         use_container_width=True,
                         key="exec_run_backtest"
@@ -2595,7 +2595,7 @@ with main_tabs[2]:
                                     st.session_state['exec_strategy_config'] = strategy_config
                                     st.session_state['exec_template_name'] = selected_template
                                     
-                                    st.success("✅ Backtest complete!")
+                                    st.success("âœ… Backtest complete!")
                                 else:
                                     st.error("Failed to fetch data for backtest.")
                             except Exception as e:
@@ -2613,7 +2613,7 @@ with main_tabs[2]:
                     open_positions = engine.get_open_positions() if hasattr(engine, 'get_open_positions') else []
                     
                     if open_positions:
-                        st.markdown("### 📊 Current Open Positions")
+                        st.markdown("### ðŸ“Š Current Open Positions")
                         open_df = pd.DataFrame(open_positions)
                         
                         def color_pnl(val):
@@ -2638,30 +2638,30 @@ with main_tabs[2]:
                         )
                         
                         if calculated_orders:
-                            st.markdown("#### 📋 Order Preview")
+                            st.markdown("#### ðŸ“‹ Order Preview")
                             preview_df = pd.DataFrame(calculated_orders)
                             if 'note' in preview_df.columns:
                                 preview_df = preview_df[['tradingsymbol', 'quantity', 'price', 'weight_pct', 'estimated_value', 'note']]
-                                preview_df.columns = ['Stock', 'Qty', 'Price (₹)', 'Weight %', 'Est. Value (₹)', 'Note']
+                                preview_df.columns = ['Stock', 'Qty', 'Price (â‚¹)', 'Weight %', 'Est. Value (â‚¹)', 'Note']
                             else:
                                 preview_df = preview_df[['tradingsymbol', 'quantity', 'price', 'weight_pct', 'estimated_value']]
-                                preview_df.columns = ['Stock', 'Qty', 'Price (₹)', 'Weight %', 'Est. Value (₹)']
+                                preview_df.columns = ['Stock', 'Qty', 'Price (â‚¹)', 'Weight %', 'Est. Value (â‚¹)']
                             st.dataframe(preview_df, use_container_width=True, hide_index=True)
                             
                             total_value = sum(o['estimated_value'] for o in calculated_orders)
-                            st.caption(f"**Total:** ₹{total_value:,.2f} | **Unused:** ₹{exec_capital - total_value:,.2f}")
+                            st.caption(f"**Total:** â‚¹{total_value:,.2f} | **Unused:** â‚¹{exec_capital - total_value:,.2f}")
                         
                         st.markdown("---")
                         
                         # Execution buttons
                         if not execution_name:
-                            st.warning("⚠️ Please enter an Execution Name above before executing.")
+                            st.warning("âš ï¸ Please enter an Execution Name above before executing.")
                         else:
                             exec_col1, exec_col2 = st.columns(2)
                             
                             with exec_col1:
                                 paper_clicked = st.button(
-                                    "📄 Paper Execute",
+                                    "ðŸ“„ Paper Execute",
                                     use_container_width=True,
                                     help="Simulate execution without placing real orders",
                                     key="paper_execute_btn"
@@ -2670,14 +2670,14 @@ with main_tabs[2]:
                             with exec_col2:
                                 if is_authenticated:
                                     live_clicked = st.button(
-                                        "🚀 Live Execute",
+                                        "ðŸš€ Live Execute",
                                         type="primary",
                                         use_container_width=True,
                                         help="Place real orders on Zerodha",
                                         key="live_execute_btn"
                                     )
                                 else:
-                                    st.info("🔐 Login to execute live trades")
+                                    st.info("ðŸ” Login to execute live trades")
                                     live_clicked = False
                             
                             # Handle Paper Execute
@@ -2715,7 +2715,7 @@ with main_tabs[2]:
                                     )
                                     
                                     if success:
-                                        st.success(f"✅ Paper execution saved: **{execution_name}**")
+                                        st.success(f"âœ… Paper execution saved: **{execution_name}**")
                                         st.balloons()
                                     else:
                                         st.error("Failed to save paper execution.")
@@ -2765,30 +2765,30 @@ with main_tabs[2]:
                                     )
                                     
                                     if result['success']:
-                                        st.success(f"✅ {result['message']} - Execution saved as **{execution_name}**")
+                                        st.success(f"âœ… {result['message']} - Execution saved as **{execution_name}**")
                                         if result['orders_placed']:
                                             st.markdown("**Orders Placed:**")
                                             for order in result['orders_placed']:
-                                                st.write(f"• {order['tradingsymbol']}: {order['quantity']} shares - ID: {order.get('order_id', 'N/A')}")
+                                                st.write(f"â€¢ {order['tradingsymbol']}: {order['quantity']} shares - ID: {order.get('order_id', 'N/A')}")
                                     else:
-                                        st.error(f"❌ {result['message']}")
+                                        st.error(f"âŒ {result['message']}")
                                     
                                     if result['orders_failed']:
                                         st.markdown("**Failed Orders:**")
                                         for order in result['orders_failed']:
-                                            st.error(f"• {order['tradingsymbol']}: {order['message']}")
+                                            st.error(f"â€¢ {order['tradingsymbol']}: {order['message']}")
                     else:
                         st.info("No open positions from backtest.")
         
         # ==================== VIEW PAST EXECUTIONS ====================
         else:
-            st.markdown("### 📊 Past Executions")
+            st.markdown("### ðŸ“Š Past Executions")
             
             # Get saved executions
             executions = execution_storage.list_executions() if execution_storage.is_execution_storage_configured() else []
             
             if not executions:
-                st.info("📋 No past executions found. Execute a strategy first.")
+                st.info("ðŸ“‹ No past executions found. Execute a strategy first.")
             else:
                 # Build dropdown options
                 exec_options = [f"{e['name']} ({e['mode'].upper()}, {e['created_at'][:10]})" for e in executions]
@@ -2810,7 +2810,7 @@ with main_tabs[2]:
                         st.markdown("---")
                         info_cols = st.columns(4)
                         info_cols[0].metric("Mode", execution_data.get('mode', '').upper())
-                        info_cols[1].metric("Capital", f"₹{execution_data.get('capital', 0):,.0f}")
+                        info_cols[1].metric("Capital", f"â‚¹{execution_data.get('capital', 0):,.0f}")
                         info_cols[2].metric("Template", execution_data.get('strategy_template', 'N/A'))
                         info_cols[3].metric("Trades", len(execution_data.get('trades', [])))
                         
@@ -2819,14 +2819,14 @@ with main_tabs[2]:
                         # Trade log
                         trades = execution_data.get('trades', [])
                         if trades:
-                            st.markdown("### 📝 Trade Log")
+                            st.markdown("### ðŸ“ Trade Log")
                             trades_df = pd.DataFrame(trades)
                             st.dataframe(trades_df, use_container_width=True, hide_index=True)
                         
                         # Portfolio values / charts
                         portfolio_values = execution_data.get('portfolio_values', [])
                         if portfolio_values and len(portfolio_values) > 1:
-                            st.markdown("### 📈 Performance Charts")
+                            st.markdown("### ðŸ“ˆ Performance Charts")
                             
                             pv_df = pd.DataFrame(portfolio_values)
                             pv_df['date'] = pd.to_datetime(pv_df['date'])
@@ -2846,7 +2846,7 @@ with main_tabs[2]:
                                 fig_equity.update_layout(
                                     title="Equity Curve",
                                     xaxis_title="Date",
-                                    yaxis_title="Portfolio Value (₹)",
+                                    yaxis_title="Portfolio Value (â‚¹)",
                                     height=350,
                                     margin=dict(l=0,r=0,t=40,b=0),
                                     template='plotly_white'
@@ -2878,16 +2878,16 @@ with main_tabs[2]:
                         
                         # Delete button
                         st.markdown("---")
-                        if st.button("🗑️ Delete Execution", key="delete_exec_btn"):
+                        if st.button("ðŸ—‘ï¸ Delete Execution", key="delete_exec_btn"):
                             if execution_storage.delete_execution(selected_exec_name):
-                                st.success(f"✅ Deleted: {selected_exec_name}")
+                                st.success(f"âœ… Deleted: {selected_exec_name}")
                                 st.rerun()
                     else:
                         st.error("Failed to load execution data.")
 
 # ==================== TAB 4: DATA DOWNLOAD ====================
 with main_tabs[3]:
-    st.subheader("📥 Data Download")
+    st.subheader("ðŸ“¥ Data Download")
     st.markdown("Download historical data for all universes. This is a one-time setup - data will be cached for fast backtests.")
 
     from portfolio_engine import DataCache
@@ -2901,21 +2901,21 @@ with main_tabs[3]:
     
     with col3:
         st.write("")  # Spacer
-        if st.button("🗑️ Clear All Cache", type="secondary", key="clear_cache"):
+        if st.button("ðŸ—‘ï¸ Clear All Cache", type="secondary", key="clear_cache"):
             cache.clear()
-            st.success("✅ Cache cleared! Please refresh the page.")
+            st.success("âœ… Cache cleared! Please refresh the page.")
             st.rerun()
 
     st.markdown("---")
     
     # Refresh Universes from NSE
-    st.markdown("### 🔄 Refresh Universe Constituents")
+    st.markdown("### ðŸ”„ Refresh Universe Constituents")
     st.info("Fetch live index constituents from NSE India. This updates the stock lists for all universes.")
     
     refresh_col1, refresh_col2 = st.columns([1, 3])
     
     with refresh_col1:
-        if st.button("🔄 Refresh Universes", type="secondary", key="refresh_universes"):
+        if st.button("ðŸ”„ Refresh Universes", type="secondary", key="refresh_universes"):
             try:
                 from nse_fetcher import refresh_universes, load_from_cache
                 
@@ -2933,7 +2933,7 @@ with main_tabs[3]:
                 
                 if success:
                     cached, timestamp = load_from_cache()
-                    st.success(f"✅ {message}. Cached at: {timestamp}")
+                    st.success(f"âœ… {message}. Cached at: {timestamp}")
                     
                     # Show summary - only for our specified indexes
                     from nifty_universe import INDEX_NAMES
@@ -2947,20 +2947,20 @@ with main_tabs[3]:
                     # Show cached data info even if refresh failed
                     cached, timestamp = load_from_cache()
                     if cached:
-                        st.warning(f"⚠️ Live refresh failed (NSE blocks cloud servers). Using cached data from: {timestamp} ({len(cached)} universes)")
+                        st.warning(f"âš ï¸ Live refresh failed (NSE blocks cloud servers). Using cached data from: {timestamp} ({len(cached)} universes)")
                     else:
-                        st.error(f"❌ {message}")
+                        st.error(f"âŒ {message}")
             except Exception as e:
                 # Check if we have cached data to fall back to
                 try:
                     from nse_fetcher import load_from_cache
                     cached, timestamp = load_from_cache()
                     if cached:
-                        st.warning(f"⚠️ NSE blocks cloud requests. Using pre-loaded cache: {timestamp} ({len(cached)} universes)")
+                        st.warning(f"âš ï¸ NSE blocks cloud requests. Using pre-loaded cache: {timestamp} ({len(cached)} universes)")
                     else:
-                        st.error(f"❌ Error refreshing: {e}. Run locally: python nse_fetcher.py")
+                        st.error(f"âŒ Error refreshing: {e}. Run locally: python nse_fetcher.py")
                 except:
-                    st.error(f"❌ Error: {e}")
+                    st.error(f"âŒ Error: {e}")
     
     with refresh_col2:
         # Show current cache status
@@ -2968,30 +2968,30 @@ with main_tabs[3]:
             from nifty_universe import INDEX_NAMES
             from nse_fetcher import load_from_cache
             cached, timestamp = load_from_cache()
-            st.write(f"📊 Active indexes: **{len(INDEX_NAMES)}**")
+            st.write(f"ðŸ“Š Active indexes: **{len(INDEX_NAMES)}**")
             if cached and timestamp:
-                st.write(f"📅 Cache updated: **{timestamp}**")
+                st.write(f"ðŸ“… Cache updated: **{timestamp}**")
         except:
-            st.write("⚠️ Universe data not initialized.")
+            st.write("âš ï¸ Universe data not initialized.")
     
     st.markdown("---")
 
     # Download All Data Button
-    st.markdown("### 🔽 Download All Universe Data")
+    st.markdown("### ðŸ”½ Download All Universe Data")
     st.info("This will download and cache data for ALL stocks across ALL universes. Takes ~10-15 minutes.")
     
     # Clear cache option
     col_clear, col_download = st.columns(2)
     with col_clear:
-        if st.button("🗑️ Clear Cache First", key="clear_data_cache_btn"):
+        if st.button("ðŸ—‘ï¸ Clear Cache First", key="clear_data_cache_btn"):
             from portfolio_engine import DataCache
             cache = DataCache()
             cache.clear()
-            st.success("✅ Cache cleared! Now click 'Download All Data' to get fresh data.")
+            st.success("âœ… Cache cleared! Now click 'Download All Data' to get fresh data.")
             st.rerun()
     
     with col_download:
-        download_clicked = st.button("📥 Download All Data", type="primary", key="download_all_data_btn")
+        download_clicked = st.button("ðŸ“¥ Download All Data", type="primary", key="download_all_data_btn")
 
     if download_clicked:
         # Get all unique tickers from all universes
@@ -3024,9 +3024,9 @@ with main_tabs[3]:
 
             status_text.markdown(f"""
             <div style="padding: 10px; background: rgba(0,255,136,0.1); border-radius: 5px;">
-                <div style="font-size: 16px; font-weight: bold;">📊 {ticker}</div>
+                <div style="font-size: 16px; font-weight: bold;">ðŸ“Š {ticker}</div>
                 <div>Progress: {current}/{total} ({pct*100:.1f}%)</div>
-                <div>⏱️ Remaining: {mins:02d}:{secs:02d} | ⏰ Elapsed: {elapsed_mins:02d}:{elapsed_secs:02d}</div>
+                <div>â±ï¸ Remaining: {mins:02d}:{secs:02d} | â° Elapsed: {elapsed_mins:02d}:{elapsed_secs:02d}</div>
             </div>
             """, unsafe_allow_html=True)
 
@@ -3037,27 +3037,27 @@ with main_tabs[3]:
         status_text.empty()
 
         total_time = time.time() - start_time
-        st.success(f"✅ Downloaded {success_count}/{len(all_tickers)} stocks in {int(total_time)}s!")
+        st.success(f"âœ… Downloaded {success_count}/{len(all_tickers)} stocks in {int(total_time)}s!")
         st.balloons()
 
     # ===== BROKER API DATA DOWNLOAD =====
     st.markdown("---")
-    st.markdown("### 📊 Broker API Data (Dhan)")
+    st.markdown("### ðŸ“Š Broker API Data (Dhan)")
     st.info("Download historical data from Dhan API and store in Hugging Face for use in backtests. This provides more accurate data than Yahoo Finance.")
     
     # Dhan API Authentication Check Button
-    if st.button("🔐 Check Dhan API Access", key="check_dhan_api_btn"):
+    if st.button("ðŸ” Check Dhan API Access", key="check_dhan_api_btn"):
         with st.spinner("Checking Dhan API credentials..."):
             try:
                 from config import validate_credentials, get_dhan_client, DHAN_CLIENT_ID
                 
                 # Step 1: Check credentials are configured
                 validate_credentials()
-                st.success(f"✅ Credentials configured (Client ID: {DHAN_CLIENT_ID[:4]}...{DHAN_CLIENT_ID[-4:]})")
+                st.success(f"âœ… Credentials configured (Client ID: {DHAN_CLIENT_ID[:4]}...{DHAN_CLIENT_ID[-4:]})")
                 
                 # Step 2: Try to create client and fetch test data
                 dhan = get_dhan_client()
-                st.success("✅ Dhan client created successfully")
+                st.success("âœ… Dhan client created successfully")
                 
                 # Step 3: Try a test API call (historical data for RELIANCE)
                 from datetime import date, timedelta
@@ -3073,19 +3073,19 @@ with main_tabs[3]:
                 if response.get('status') == 'success':
                     data = response.get('data', {})
                     data_points = len(data.get('timestamp', []))
-                    st.success(f"✅ API test passed! Fetched {data_points} data points for RELIANCE")
+                    st.success(f"âœ… API test passed! Fetched {data_points} data points for RELIANCE")
                     st.balloons()
                 else:
-                    st.error(f"❌ API test failed: {response.get('remarks', 'Unknown error')}")
+                    st.error(f"âŒ API test failed: {response.get('remarks', 'Unknown error')}")
                     
             except ValueError as e:
-                st.error(f"❌ Credentials not configured: {e}")
+                st.error(f"âŒ Credentials not configured: {e}")
                 st.info("Add DHAN_CLIENT_ID and DHAN_ACCESS_TOKEN to your .env file")
             except ImportError as e:
-                st.error(f"❌ dhanhq SDK not installed: {e}")
+                st.error(f"âŒ dhanhq SDK not installed: {e}")
                 st.code("pip install dhanhq", language="bash")
             except Exception as e:
-                st.error(f"❌ API Error: {e}")
+                st.error(f"âŒ API Error: {e}")
     
     st.markdown("")  # Spacing
     
@@ -3095,7 +3095,7 @@ with main_tabs[3]:
     
     if not hf_configured:
         st.warning("""
-        ⚠️ **Hugging Face not configured.** To use Broker API data:
+        âš ï¸ **Hugging Face not configured.** To use Broker API data:
         1. Create a Hugging Face account at [huggingface.co](https://huggingface.co)
         2. Get a write access token from [Settings > Access Tokens](https://huggingface.co/settings/tokens)
         3. Create a new dataset repository
@@ -3111,7 +3111,7 @@ with main_tabs[3]:
         try:
             hf = HuggingFaceManager()
             available_symbols = hf.list_available_symbols()
-            st.success(f"✅ Hugging Face connected. **{len(available_symbols)}** symbols available.")
+            st.success(f"âœ… Hugging Face connected. **{len(available_symbols)}** symbols available.")
         except Exception as e:
             st.error(f"HuggingFace connection error: {e}")
             available_symbols = []
@@ -3123,7 +3123,7 @@ with main_tabs[3]:
         with dhan_col2:
             dhan_to_date = st.date_input("To Date", datetime.date.today(), key="dhan_to")
         
-        if st.button("📥 Download Broker API Data", type="primary", key="download_dhan_data_btn"):
+        if st.button("ðŸ“¥ Download Broker API Data", type="primary", key="download_dhan_data_btn"):
             # Get all unique tickers from all universes
             all_tickers = set()
             all_universe_names = get_all_universe_names()
@@ -3148,10 +3148,10 @@ with main_tabs[3]:
                 
                 status_text.markdown(f"""
                 <div style="padding: 10px; background: rgba(0,255,136,0.1); border-radius: 5px;">
-                    <div style="font-size: 16px; font-weight: bold;">📊 {symbol}</div>
+                    <div style="font-size: 16px; font-weight: bold;">ðŸ“Š {symbol}</div>
                     <div>Progress: {current}/{total} ({pct*100:.1f}%)</div>
                     <div>Status: {status}</div>
-                    <div>⏰ Elapsed: {elapsed_mins:02d}:{elapsed_secs:02d}</div>
+                    <div>â° Elapsed: {elapsed_mins:02d}:{elapsed_secs:02d}</div>
                 </div>
                 """, unsafe_allow_html=True)
             
@@ -3168,18 +3168,18 @@ with main_tabs[3]:
                 status_text.empty()
                 
                 total_time = time.time() - start_time
-                st.success(f"✅ Synced {success_count}/{len(all_tickers)} stocks in {int(total_time)}s!")
+                st.success(f"âœ… Synced {success_count}/{len(all_tickers)} stocks in {int(total_time)}s!")
                 st.balloons()
                 
             except Exception as e:
                 progress_bar.empty()
                 status_text.empty()
-                st.error(f"❌ Download failed: {e}")
+                st.error(f"âŒ Download failed: {e}")
 
 
 # ==================== TAB 5: DHAN AUTH ====================
 with main_tabs[4]:
-    st.markdown("### 🔐 Dhan API Authentication")
+    st.markdown("### ðŸ” Dhan API Authentication")
 
     from config import (
         get_saved_credentials, save_credentials_to_env,
@@ -3189,38 +3189,38 @@ with main_tabs[4]:
     _on_cloud = _is_streamlit_cloud()
     creds     = get_saved_credentials()
 
-    # ── Environment banner ───────────────────────────────────────────
+    # â”€â”€ Environment banner â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     if _on_cloud:
         st.info(
-            "🌥️ **Running on Streamlit Cloud**  \n"
+            "ðŸŒ¥ï¸ **Running on Streamlit Cloud**  \n"
             "Client ID and PIN are read from **Streamlit Secrets** (permanent).  \n"
-            "Access Token is stored in the **session** only — re-enter TOTP after each restart."
+            "Access Token is stored in the **session** only â€” re-enter TOTP after each restart."
         )
     else:
         st.info(
-            "💻 **Running locally**  \n"
+            "ðŸ’» **Running locally**  \n"
             "Credentials are read from your **.env file** (permanent for Client ID/PIN).  \n"
             "Access Token is also saved to .env and persists until Dhan invalidates it (~24h)."
         )
 
-    # ── Step 1: Credentials Setup ──────────────────────────────────────
+    # â”€â”€ Step 1: Credentials Setup â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     st.markdown("---")
 
     if _on_cloud:
         # On Streamlit Cloud: show what's configured in secrets, no save UI
-        st.markdown("#### ⚙️ Step 1 — Streamlit Secrets Configuration")
+        st.markdown("#### âš™ï¸ Step 1 â€” Streamlit Secrets Configuration")
         st.markdown("""
-        Client ID and PIN are configured in your app's **Streamlit Secrets** — not entered here.
+        Client ID and PIN are configured in your app's **Streamlit Secrets** â€” not entered here.
         To update them:
         1. Go to your Streamlit Cloud dashboard
-        2. Click your app → **⋮ → Settings → Secrets**
+        2. Click your app â†’ **â‹® â†’ Settings â†’ Secrets**
         3. Add / edit the values in TOML format (see below)
-        4. Click **Save** — the app restarts with new values
+        4. Click **Save** â€” the app restarts with new values
         """)
 
-        with st.expander("📋 Required Streamlit Secrets format", expanded=not bool(creds.get('client_id'))):
+        with st.expander("ðŸ“‹ Required Streamlit Secrets format", expanded=not bool(creds.get('client_id'))):
             st.code("""
-# Paste this into Streamlit Cloud → App Settings → Secrets
+# Paste this into Streamlit Cloud â†’ App Settings â†’ Secrets
 
 DHAN_CLIENT_ID = "1000000001"
 DHAN_PIN       = "12345"
@@ -3234,18 +3234,18 @@ DHAN_ACCESS_TOKEN = ""
         if creds.get('client_id'):
             cid     = creds['client_id']
             masked  = cid[:3] + '*' * max(0, len(cid) - 6) + cid[-3:] if len(cid) > 6 else '***'
-            st.success(f"✅ Client ID found in Secrets: `{masked}`")
+            st.success(f"âœ… Client ID found in Secrets: `{masked}`")
         else:
-            st.error("❌ DHAN_CLIENT_ID not found in Streamlit Secrets. Add it via the dashboard.")
+            st.error("âŒ DHAN_CLIENT_ID not found in Streamlit Secrets. Add it via the dashboard.")
 
         if creds.get('pin'):
-            st.success("✅ PIN found in Secrets")
+            st.success("âœ… PIN found in Secrets")
         else:
-            st.error("❌ DHAN_PIN not found in Streamlit Secrets.")
+            st.error("âŒ DHAN_PIN not found in Streamlit Secrets.")
 
     else:
         # Local: show editable fields that save to .env
-        st.markdown("#### ⚙️ Step 1 — Save Client ID & PIN (one-time)")
+        st.markdown("#### âš™ï¸ Step 1 â€” Save Client ID & PIN (one-time)")
         st.caption("Saved permanently to your .env file. You never need to enter these again.")
 
         c1, c2 = st.columns(2)
@@ -3255,7 +3255,7 @@ DHAN_ACCESS_TOKEN = ""
                 value=creds.get('client_id', ''),
                 key="dhan_auth_client_id",
                 placeholder="e.g. 1000000001",
-                help="Your Dhan trading account client ID (Profile → Account Info)"
+                help="Your Dhan trading account client ID (Profile â†’ Account Info)"
             )
         with c2:
             input_pin = st.text_input(
@@ -3267,27 +3267,27 @@ DHAN_ACCESS_TOKEN = ""
                 help="Your Dhan account login PIN (stored in .env, never in git)"
             )
 
-        if st.button("💾 Save to .env", key="save_dhan_creds_btn"):
+        if st.button("ðŸ’¾ Save to .env", key="save_dhan_creds_btn"):
             if input_client_id.strip() and input_pin.strip():
                 save_credentials_to_env(
                     client_id=input_client_id.strip(),
                     pin=input_pin.strip()
                 )
-                st.success("✅ Saved to .env file permanently.")
+                st.success("âœ… Saved to .env file permanently.")
                 st.rerun()
             else:
-                st.error("❌ Enter both Client ID and PIN.")
+                st.error("âŒ Enter both Client ID and PIN.")
 
         if creds.get('client_id'):
             cid    = creds['client_id']
             masked = cid[:3] + '*' * max(0, len(cid) - 6) + cid[-3:] if len(cid) > 6 else '***'
-            st.success(f"✅ Client ID saved: `{masked}`")
+            st.success(f"âœ… Client ID saved: `{masked}`")
         else:
-            st.warning("⚠️ Client ID not set yet")
+            st.warning("âš ï¸ Client ID not set yet")
 
-    # ── Step 2: TOTP Authentication ───────────────────────────────────
+    # â”€â”€ Step 2: TOTP Authentication â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     st.markdown("---")
-    st.markdown("#### 🔢 Step 2 — Authenticate with TOTP")
+    st.markdown("#### ðŸ”¢ Step 2 â€” Authenticate with TOTP")
 
     # Show token status
     fresh_creds = get_saved_credentials()
@@ -3295,20 +3295,20 @@ DHAN_ACCESS_TOKEN = ""
     if cur_token:
         masked_tok = cur_token[:8] + '...' + cur_token[-4:]
         if _on_cloud:
-            st.success(f"✅ Token active this session: `{masked_tok}` ({len(cur_token)} chars)")
+            st.success(f"âœ… Token active this session: `{masked_tok}` ({len(cur_token)} chars)")
         else:
-            st.success(f"✅ Token saved in .env: `{masked_tok}` ({len(cur_token)} chars)")
+            st.success(f"âœ… Token saved in .env: `{masked_tok}` ({len(cur_token)} chars)")
     else:
-        st.warning("⚠️ No active token. Enter TOTP below to generate one.")
+        st.warning("âš ï¸ No active token. Enter TOTP below to generate one.")
 
     if _on_cloud:
         st.caption(
-            "🔄 On Streamlit Cloud, tokens are stored **in your session only** and lost on restart. "
+            "ðŸ”„ On Streamlit Cloud, tokens are stored **in your session only** and lost on restart. "
             "Open your authenticator app and enter a fresh TOTP to re-authenticate after each restart."
         )
     else:
         st.caption(
-            "💾 Locally, the token is saved to .env after auth and reloaded automatically until Dhan expires it (~24h)."
+            "ðŸ’¾ Locally, the token is saved to .env after auth and reloaded automatically until Dhan expires it (~24h)."
         )
 
     totp_col, btn_col = st.columns([2, 1])
@@ -3322,13 +3322,13 @@ DHAN_ACCESS_TOKEN = ""
         )
     with btn_col:
         auth_btn = st.button(
-            "🔑 Authenticate", type="primary",
+            "ðŸ”‘ Authenticate", type="primary",
             key="dhan_auth_btn", use_container_width=True
         )
 
     if auth_btn:
         if not totp_input or len(totp_input.strip()) != 6 or not totp_input.strip().isdigit():
-            st.error("❌ Enter a valid 6-digit TOTP.")
+            st.error("âŒ Enter a valid 6-digit TOTP.")
         else:
             with st.spinner("Authenticating with Dhan..."):
                 result = authenticate_dhan(totp_input.strip())
@@ -3338,19 +3338,19 @@ DHAN_ACCESS_TOKEN = ""
                 # Sync the new token into os.environ immediately
                 bootstrap_env_from_secrets()
             else:
-                st.error(f"❌ {result['message']}")
+                st.error(f"âŒ {result['message']}")
 
-    # ── Step 3: Connection Test ───────────────────────────────────────
+    # â”€â”€ Step 3: Connection Test â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     st.markdown("---")
-    st.markdown("#### 📡 Step 3 — Test Connection")
+    st.markdown("#### ðŸ“¡ Step 3 â€” Test Connection")
 
-    if st.button("🔍 Test Dhan API", key="dhan_test_conn_btn"):
+    if st.button("ðŸ” Test Dhan API", key="dhan_test_conn_btn"):
         with st.spinner("Testing..."):
             try:
                 from config import get_dhan_client, validate_credentials
                 validate_credentials()
                 dhan_test = get_dhan_client()
-                st.success("✅ Dhan client created.")
+                st.success("âœ… Dhan client created.")
 
                 from datetime import date as _date, timedelta
                 resp = dhan_test.historical_daily_data(
@@ -3362,11 +3362,11 @@ DHAN_ACCESS_TOKEN = ""
                 )
                 if isinstance(resp, dict) and resp.get('status') == 'success':
                     pts = len(resp.get('data', {}).get('timestamp', []))
-                    st.success(f"✅ Equity API: {pts} data points (RELIANCE)")
+                    st.success(f"âœ… Equity API: {pts} data points (RELIANCE)")
                 else:
-                    st.warning(f"⚠️ Equity API: {str(resp)[:200]}")
+                    st.warning(f"âš ï¸ Equity API: {str(resp)[:200]}")
 
-                st.markdown("**🛡️ Rolling Options (Put Hedge)**")
+                st.markdown("**ðŸ›¡ï¸ Rolling Options (Put Hedge)**")
                 try:
                     o_resp = dhan_test.rolling_options_data(
                         exchange_segment="NSE_FNO", instrument="OPTIDX",
@@ -3377,534 +3377,805 @@ DHAN_ACCESS_TOKEN = ""
                     )
                     if isinstance(o_resp, dict) and o_resp.get('status') == 'success':
                         n = len(o_resp.get('data', {}).get('timestamp', []))
-                        st.success(f"✅ Rolling Options API: {n} data points")
+                        st.success(f"âœ… Rolling Options API: {n} data points")
                     else:
-                        st.warning(f"⚠️ Rolling Options: {str(o_resp)[:300]}")
+                        st.warning(f"âš ï¸ Rolling Options: {str(o_resp)[:300]}")
                 except AttributeError:
-                    st.info("⚠️ SDK missing rolling_options_data — direct REST will be used during backtest.")
+                    st.info("âš ï¸ SDK missing rolling_options_data â€” direct REST will be used during backtest.")
                 except Exception as oe:
-                    st.warning(f"⚠️ Rolling Options: {oe}")
+                    st.warning(f"âš ï¸ Rolling Options: {oe}")
 
             except ValueError as ve:
-                st.error(f"❌ {ve}")
+                st.error(f"âŒ {ve}")
             except Exception as e:
-                st.error(f"❌ Connection failed: {e}")
+                st.error(f"âŒ Connection failed: {e}")
 
 
-# ==================== TAB 6: SCANNER ====================
+# ==================== TAB 6: OPTIONS BACKTEST ====================
 with main_tabs[5]:
-    import sys
-    from pathlib import Path as _Path
-    _ROOT = _Path(__file__).resolve().parent
-    if str(_ROOT) not in sys.path:
-        sys.path.insert(0, str(_ROOT))
-
-    from core.signal_builder import (
-        SignalBuilder, SignalRule, Condition,
-        STRATEGY_TEMPLATES, AVAILABLE_INDICATORS, AVAILABLE_OPERATORS,
-    )
-    from core.universe import UniverseManager
-    from core.scanner import Scanner, DEFAULT_SCORING_WEIGHTS
-    from core.scoring import ScoreParser as ExtScoreParser
-
-    st.markdown("""
-    <div style='background:linear-gradient(135deg,#0f0c29,#302b63,#24243e);
-                padding:1.5rem 2rem;border-radius:12px;margin-bottom:1rem;color:white;'>
-        <h2 style='margin:0;font-size:1.6rem;'>🔍 Entry / Exit Signal Scanner</h2>
-        <p style='color:rgba(255,255,255,0.65);margin-top:0.3rem;'>
-        Build signal rules, scan your universe, and rank stocks by composite score
-        </p>
-    </div>
-    """, unsafe_allow_html=True)
-
-    # ── Init session state ────────────────────────────────────────────────────
-    for _k in ["sc_entry_conds", "sc_exit_conds", "sc_mode", "sc_results",
-               "sc_entry_logic", "sc_exit_logic"]:
-        if _k not in st.session_state:
-            if _k == "sc_mode":
-                st.session_state[_k] = "Equity"
-            elif _k.endswith("_logic"):
-                st.session_state[_k] = "AND"
-            else:
-                st.session_state[_k] = [] if "conds" in _k else None
-
-    _um = UniverseManager()
-
-    # ── STEP 1: Mode & Universe ──────────────────────────────────────────────
-    st.subheader("Step 1 — Asset Class & Universe")
-    _mc1, _mc2 = st.columns(2)
-    with _mc1:
-        if st.button("📈 Equity Mode", use_container_width=True,
-                     type="primary" if st.session_state.sc_mode == "Equity" else "secondary",
-                     key="sc_btn_equity"):
-            st.session_state.sc_mode = "Equity"
-            st.rerun()
-    with _mc2:
-        if st.button("🎯 Options Mode (Nifty Index)", use_container_width=True,
-                     type="primary" if st.session_state.sc_mode != "Equity" else "secondary",
-                     key="sc_btn_options"):
-            st.session_state.sc_mode = "Options (Nifty Index)"
-            st.rerun()
-    st.caption(f"**Mode:** {st.session_state.sc_mode}")
-
-    if st.session_state.sc_mode == "Equity":
-        _usrc = st.radio("Universe", ["Predefined Index", "Custom List"], horizontal=True, key="sc_usrc")
-        if _usrc == "Predefined Index":
-            _idx = st.selectbox("Index", _um.get_index_display_names(), key="sc_index")
-            _tickers = _um.get_equity_universe(_idx)
-            st.caption(f"📋 {len(_tickers)} stocks in {_idx}")
-        else:
-            _raw = st.text_area("Tickers (comma/newline separated)", height=80, key="sc_custom_txt",
-                                placeholder="RELIANCE, TCS, INFY\nHDFCBANK")
-            _tickers = _um.parse_custom_tickers(_raw) if _raw.strip() else []
-            if _tickers:
-                st.caption(f"📋 {len(_tickers)} tickers: {', '.join(_tickers[:8])}{'...' if len(_tickers)>8 else ''}")
-    else:
-        st.info("🎯 Signals evaluated on **NIFTY50 Index** (^NSEI). Use Options Backtest tab to simulate trades.")
-        _tickers = ["^NSEI"]
-
-    _sd_col, _ed_col = st.columns(2)
-    with _sd_col:
-        _sc_start = st.date_input("Start Date", value=pd.Timestamp("2023-01-01"), key="sc_start")
-    with _ed_col:
-        _sc_end = st.date_input("End Date", value=pd.Timestamp.today(), key="sc_end")
-
-    st.divider()
-
-    # ── STEP 2: Signal Builder ───────────────────────────────────────────────
-    st.subheader("Step 2 — Entry / Exit Signal Builder")
-
-    def _sc_rule_builder(label, cond_key, logic_key):
-        """Inline rule builder — returns a SignalRule."""
-        _tmpl_options = ["(Custom)"] + list(STRATEGY_TEMPLATES.keys())
-        _tmpl = st.selectbox(f"{label} Template", _tmpl_options, key=f"{cond_key}_tmpl")
-
-        # Seed from template
-        _direction = "entry" if "entry" in cond_key else "exit"
-        if _tmpl != "(Custom)":
-            _rule_tmpl = STRATEGY_TEMPLATES[_tmpl].get(_direction, SignalRule())
-            if st.session_state.get(f"{cond_key}_last_tmpl") != _tmpl:
-                st.session_state[cond_key] = [c.to_dict() for c in _rule_tmpl.conditions]
-                st.session_state[logic_key] = _rule_tmpl.logic
-                st.session_state[f"{cond_key}_last_tmpl"] = _tmpl
-
-        if cond_key not in st.session_state:
-            st.session_state[cond_key] = []
-
-        with st.container(border=True):
-            _conds = st.session_state[cond_key]
-            if st.button(f"➕ Add Condition", key=f"{cond_key}_add"):
-                _conds.append({"left": "RSI_14", "operator": ">", "right": "50"})
-                st.session_state[cond_key] = _conds
-                st.rerun()
-
-            _del_idx = None
-            for _i, _c in enumerate(_conds):
-                _cc = st.columns([2.5, 2, 2, 0.5])
-                with _cc[0]:
-                    _left_opts = AVAILABLE_INDICATORS
-                    _li = _left_opts.index(_c.get("left", "RSI_14")) if _c.get("left") in _left_opts else 0
-                    _left = st.selectbox("L", _left_opts, index=_li,
-                                         key=f"{cond_key}_l_{_i}", label_visibility="collapsed")
-                with _cc[1]:
-                    _oi = AVAILABLE_OPERATORS.index(_c.get("operator", ">")) if _c.get("operator") in AVAILABLE_OPERATORS else 0
-                    _op = st.selectbox("O", AVAILABLE_OPERATORS, index=_oi,
-                                       key=f"{cond_key}_o_{_i}", label_visibility="collapsed")
-                with _cc[2]:
-                    _right = st.text_input("R", value=str(_c.get("right", "50")),
-                                           key=f"{cond_key}_r_{_i}", label_visibility="collapsed")
-                with _cc[3]:
-                    if st.button("✕", key=f"{cond_key}_d_{_i}"):
-                        _del_idx = _i
-                _conds[_i] = {"left": _left, "operator": _op, "right": _right}
-
-            if _del_idx is not None:
-                _conds.pop(_del_idx)
-                st.session_state[cond_key] = _conds
-                st.rerun()
-
-            st.session_state[cond_key] = _conds
-            _logic_sel = st.selectbox("Logic", ["AND", "OR"],
-                                       index=0 if st.session_state[logic_key] == "AND" else 1,
-                                       key=f"{logic_key}_sel")
-            st.session_state[logic_key] = _logic_sel
-
-        # Build SignalRule
-        _built_conds = []
-        for _c in _conds:
-            _r = _c["right"]
-            try:
-                _r = float(_r)
-            except (ValueError, TypeError):
-                pass
-            _built_conds.append(Condition(_c["left"], _c["operator"], _r))
-        return SignalRule(name=label, logic=st.session_state[logic_key], conditions=_built_conds)
-
-    _e_tab, _x_tab = st.tabs(["🟢 Entry Conditions", "🔴 Exit Conditions"])
-    with _e_tab:
-        _entry_rule = _sc_rule_builder("Entry", "sc_entry_conds", "sc_entry_logic")
-    with _x_tab:
-        _exit_rule = _sc_rule_builder("Exit", "sc_exit_conds", "sc_exit_logic")
-
-    st.divider()
-
-    # ── STEP 3: Scoring ──────────────────────────────────────────────────────
-    st.subheader("Step 3 — Scoring Weights")
-    _esp = ExtScoreParser()
-    _scoring_opts = _esp.get_scanner_scoring_options()
-    _sc_weights = {}
-    with st.expander("⚙️ Scoring Weights (optional — leave at 0 to skip)", expanded=False):
-        for _grp, _metrics in _scoring_opts.items():
-            st.markdown(f"**{_grp}**")
-            _wcols = st.columns(len(_metrics))
-            for _j, _m in enumerate(_metrics):
-                with _wcols[_j]:
-                    _dir = "desc" if any(_k in _m for _k in ["Volatility", "Drawdown"]) else "asc"
-                    _w = st.slider(_m, 0.0, 1.0, 0.1, 0.05, key=f"sc_w_{_m.replace(' ','_')}")
-                    if _w > 0:
-                        _sc_weights[_m] = (_w, _dir)
-
-    if not _sc_weights:
-        _sc_weights = DEFAULT_SCORING_WEIGHTS
-
-    st.divider()
-
-    # ── STEP 4: Run ─────────────────────────────────────────────────────────
-    _run_col, _clr_col, _ = st.columns([1, 1, 3])
-    with _run_col:
-        _run_sc = st.button("🚀 Run Scanner", type="primary", key="sc_run_btn")
-    with _clr_col:
-        if st.button("🔄 Clear", key="sc_clr_btn"):
-            st.session_state.sc_results = None
-            st.rerun()
-
-    if _run_sc:
-        if not _tickers:
-            st.error("No tickers selected.")
-        elif _entry_rule.is_empty():
-            st.error("Add at least one entry condition.")
-        elif _exit_rule.is_empty():
-            st.error("Add at least one exit condition.")
-        else:
-            if st.session_state.sc_mode == "Equity":
-                _pb = st.progress(0, "Starting...")
-                _st = st.empty()
-
-                def _on_prog(ticker, i, total):
-                    _pb.progress((i + 1) / total, f"Scanning {ticker} ({i+1}/{total})")
-                    _st.caption(f"⏳ {ticker}")
-
-                with st.spinner("Running scanner..."):
-                    _scanner = Scanner(_tickers, _entry_rule, _exit_rule,
-                                       str(_sc_start), str(_sc_end),
-                                       _sc_weights, _on_prog)
-                    _results = _scanner.run()
-                _pb.empty(); _st.empty()
-                if _results.empty:
-                    st.warning("No results. Check tickers/date range.")
-                else:
-                    st.session_state.sc_results = _results
-                    # Also store rules for Options Backtest tab to import
-                    st.session_state.sc_entry_rule_obj = _entry_rule
-                    st.session_state.sc_exit_rule_obj = _exit_rule
-                    st.success(f"✅ Scanned {len(_results)} stocks!")
-            else:
-                with st.spinner("Evaluating NIFTY signals..."):
-                    _nifty_res = Scanner.run_nifty_options_scan(
-                        _entry_rule, _exit_rule, str(_sc_start), str(_sc_end))
-                if _nifty_res:
-                    st.session_state.sc_results = _nifty_res
-                    st.session_state.sc_entry_rule_obj = _entry_rule
-                    st.session_state.sc_exit_rule_obj = _exit_rule
-                    st.success(f"✅ {len(_nifty_res.get('entry_dates',[]))} entry | "
-                               f"{len(_nifty_res.get('exit_dates',[]))} exit signals on NIFTY")
-                else:
-                    st.error("Failed to fetch NIFTY data.")
-
-    # ── Results ──────────────────────────────────────────────────────────────
-    if st.session_state.sc_results is not None:
-        _res = st.session_state.sc_results
-        st.divider()
-        st.subheader("📊 Results")
-
-        if isinstance(_res, pd.DataFrame):
-            _k1, _k2, _k3, _k4 = st.columns(4)
-            _k1.metric("Stocks", len(_res))
-            _k2.metric("Entry Signals", int(_res["Entry_Signal"].sum()))
-            _k3.metric("Exit Signals",  int(_res["Exit_Signal"].sum()))
-            _k4.metric("Top Score", f"{_res['Score'].max():.1f}")
-
-            # Ranked table
-            _disp = _res[["Rank", "Ticker", "Last_Close", "Entry_Signal",
-                           "Score", "Entry_Signal_Strength"]].copy()
-            _disp["Score"] = _disp["Score"].apply(lambda x: f"{x:.1f}")
-            _disp["Entry_Signal_Strength"] = _disp["Entry_Signal_Strength"].apply(lambda x: f"{x:.0f}%")
-            st.dataframe(_disp, use_container_width=True, hide_index=True)
-
-            # Bar chart
-            import plotly.express as px
-            _fig = px.bar(
-                _res.sort_values("Score", ascending=False).head(25),
-                x="Ticker", y="Score", color="Score",
-                color_continuous_scale="Viridis",
-                title="Top 25 Stocks by Score"
-            )
-            _fig.update_layout(plot_bgcolor="rgba(0,0,0,0)",
-                               paper_bgcolor="rgba(0,0,0,0)",
-                               font_color="#e0e0e0",
-                               xaxis_tickangle=-45)
-            st.plotly_chart(_fig, use_container_width=True)
-
-            # Entry signal stocks
-            _entry_stocks = _res[_res["Entry_Signal"] == True]
-            if not _entry_stocks.empty:
-                st.markdown("#### 🟢 Stocks With Active Entry Signal")
-                st.dataframe(_entry_stocks[["Rank", "Ticker", "Last_Close", "Score"]],
-                             use_container_width=True, hide_index=True)
-
-            st.download_button("⬇️ Download CSV", _res.to_csv(index=False),
-                               "scanner_results.csv", "text/csv", key="sc_dl")
-
-        elif isinstance(_res, dict):
-            # NIFTY signal scan results
-            import plotly.graph_objects as _pgo
-            _udf = _res.get("underlying_df", pd.DataFrame())
-            _k1, _k2, _k3 = st.columns(3)
-            _k1.metric("Entry Signals", len(_res.get("entry_dates", [])))
-            _k2.metric("Exit Signals",  len(_res.get("exit_dates", [])))
-            _k3.metric("Status", "🟢 ACTIVE" if _res.get("latest_entry") else "⚪ FLAT")
-
-            if not _udf.empty:
-                _fig2 = _pgo.Figure()
-                _fig2.add_trace(_pgo.Candlestick(
-                    x=_udf.index, open=_udf["Open"], high=_udf["High"],
-                    low=_udf["Low"], close=_udf["Close"], name="NIFTY"))
-                _edates = _res.get("entry_dates", [])
-                if _edates:
-                    _ep = _udf.loc[_udf.index.isin(_edates), "Low"] * 0.995
-                    _fig2.add_trace(_pgo.Scatter(x=_edates, y=_ep.tolist(),
-                        mode="markers", name="Entry",
-                        marker=dict(symbol="triangle-up", color="#00ff88", size=12)))
-                _xdates = _res.get("exit_dates", [])
-                if _xdates:
-                    _xp = _udf.loc[_udf.index.isin(_xdates), "High"] * 1.005
-                    _fig2.add_trace(_pgo.Scatter(x=_xdates, y=_xp.tolist(),
-                        mode="markers", name="Exit",
-                        marker=dict(symbol="triangle-down", color="#ff4444", size=12)))
-                _fig2.update_layout(plot_bgcolor="rgba(0,0,0,0)",
-                                    paper_bgcolor="rgba(0,0,0,0)",
-                                    font_color="#e0e0e0",
-                                    xaxis_rangeslider_visible=False, height=480)
-                st.plotly_chart(_fig2, use_container_width=True)
-            st.info("💡 **Next**: Go to the **🎯 Options Backtest** tab to simulate a strategy using these signals.")
-
-
-# ==================== TAB 7: OPTIONS BACKTEST ====================
-with main_tabs[6]:
-    import sys
+    import sys as _sys2
     from pathlib import Path as _Path2
+    from datetime import date as _date2, timedelta as _td2
+    import plotly.graph_objects as _opgo
+
     _ROOT2 = _Path2(__file__).resolve().parent
-    if str(_ROOT2) not in sys.path:
-        sys.path.insert(0, str(_ROOT2))
+    if str(_ROOT2) not in _sys2.path:
+        _sys2.path.insert(0, str(_ROOT2))
 
-    from core.signal_builder import SignalRule as _SigRule, Condition as _Cond, STRATEGY_TEMPLATES as _TMPLS
-    from core.options_engine import (
-        OptionsBacktestEngine, OPTION_STRATEGY_CONFIGS, NIFTY_LOT_SIZE, OptionLeg
+    from core.multi_tf_engine import (
+        MultiTFEngine, MultiTFRule, MultiTFCondition, Operand,
+        INDICATOR_DEFS, OPERATORS, PRICE_FIELDS, INTRADAY_INTERVALS, DAILY_INTERVALS,
     )
-    import plotly.graph_objects as _go2
+    from core.options_engine import NIFTY_LOT_SIZE, OptionLeg
 
+    # â”€â”€ Header â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     st.markdown("""
     <div style='background:linear-gradient(135deg,#0a0a1a,#1a0533,#0d1a4a);
-                padding:1.5rem 2rem;border-radius:12px;margin-bottom:1rem;color:white;'>
-        <h2 style='margin:0;font-size:1.6rem;'>🎯 NIFTY Options Backtest</h2>
-        <p style='color:rgba(255,255,255,0.65);margin-top:0.3rem;'>
-        Simulate options strategies triggered by entry/exit signals on the NIFTY Index
+                padding:1.5rem 2rem;border-radius:14px;margin-bottom:1rem;color:white;
+                border:1px solid rgba(100,80,255,0.3);'>
+        <h2 style='margin:0;font-size:1.7rem;background:linear-gradient(90deg,#a78bfa,#60a5fa);
+                   -webkit-background-clip:text;-webkit-text-fill-color:transparent;'>
+            ðŸŽ¯ NIFTY Options Backtest
+        </h2>
+        <p style='color:rgba(255,255,255,0.6);margin-top:0.4rem;margin-bottom:0;font-size:0.9rem;'>
+        Build multi-timeframe signal rules â†’ choose strikes â†’ backtest using Dhan historical options data
         </p>
     </div>
     """, unsafe_allow_html=True)
 
-    # ── Config ───────────────────────────────────────────────────────────────
-    st.subheader("⚙️ Strategy Configuration")
-    _ocol1, _ocol2 = st.columns(2)
-    with _ocol1:
-        _opt_strat = st.selectbox("Option Strategy",
-                                   list(OPTION_STRATEGY_CONFIGS.keys()) + ["Custom"],
-                                   key="opt_strat_sel")
-        _strat_desc = {
-            "Buy ATM Call":     "🟢 Single leg — bullish bet. Max loss = premium paid.",
-            "Buy ATM Put":      "🔴 Single leg — bearish bet. Max loss = premium paid.",
-            "Bull Call Spread": "📈 Buy ATM CE + Sell OTM CE. Capped profit, lower cost.",
-            "Bear Put Spread":  "📉 Buy ATM PE + Sell OTM PE. Capped profit, lower cost.",
-            "Long Straddle":    "⚡ Buy ATM CE + ATM PE. Profits from big moves.",
-            "Long Strangle":    "⚡ Buy OTM CE + OTM PE. Cheaper, needs bigger move.",
-            "Custom":           "🔧 Define your own legs below.",
-        }
-        st.caption(_strat_desc.get(_opt_strat, ""))
-    with _ocol2:
-        _opt_lots   = st.number_input("Number of Lots", 1, 50, 1, key="opt_lots")
-        _opt_cap    = st.number_input("Initial Capital (₹)", 100_000, 10_000_000, 500_000,
-                                      step=50_000, key="opt_cap")
-        _opt_vix    = st.toggle("Use India VIX for IV", True, key="opt_vix")
-
-    # Custom legs
-    _custom_legs = None
-    if _opt_strat == "Custom":
-        st.markdown("**Define Custom Legs:**")
-        _n_legs = st.number_input("Number of Legs", 1, 4, 2, key="opt_n_legs")
-        _custom_legs = []
-        for _li in range(int(_n_legs)):
-            _lc = st.columns(4)
-            with _lc[0]:
-                _lt = st.selectbox("Type", ["CE", "PE"], key=f"opt_lt_{_li}")
-            with _lc[1]:
-                _ld = st.selectbox("Dir", ["BUY", "SELL"], key=f"opt_ld_{_li}")
-            with _lc[2]:
-                _lo = st.number_input("Offset×50", -10, 10, 0, key=f"opt_lo_{_li}")
-            with _lc[3]:
-                _ll = st.number_input("Lots", 1, 20, 1, key=f"opt_ll_{_li}")
-            _custom_legs.append(OptionLeg(_lt, _ld, int(_lo), int(_ll)))
-
-    st.divider()
-
-    # ── Signal rules ─────────────────────────────────────────────────────────
-    st.subheader("📡 Signal Rules")
-
-    # Import from Scanner tab if available
-    _has_scanner_rules = "sc_entry_rule_obj" in st.session_state
-    if _has_scanner_rules:
-        if st.button("📥 Import entry/exit rules from Scanner tab", key="opt_import_rules"):
-            st.session_state.opt_entry_rule = st.session_state.sc_entry_rule_obj
-            st.session_state.opt_exit_rule  = st.session_state.sc_exit_rule_obj
-            st.success("✅ Rules imported from Scanner!")
-            st.rerun()
-
-    _tmpl_names2 = ["(Custom)"] + list(_TMPLS.keys())
-    _tmpl2 = st.selectbox("Signal Template", _tmpl_names2, key="opt_tmpl2")
-
-    if _tmpl2 != "(Custom)":
-        _t2 = _TMPLS[_tmpl2]
-        st.session_state.opt_entry_rule = _t2.get("entry", _SigRule())
-        st.session_state.opt_exit_rule  = _t2.get("exit",  _SigRule())
-
-    if "opt_entry_rule" not in st.session_state:
-        st.session_state.opt_entry_rule = _SigRule()
-    if "opt_exit_rule" not in st.session_state:
-        st.session_state.opt_exit_rule = _SigRule()
-
-    _er2, _xr2 = st.columns(2)
-    with _er2:
-        st.markdown("**Entry Conditions**")
-        for _cc2 in st.session_state.opt_entry_rule.conditions:
-            st.code(f"{_cc2.left}  {_cc2.operator}  {_cc2.right}", language=None)
-        if st.session_state.opt_entry_rule.is_empty():
-            st.caption("_(No conditions set — select a template above)_")
-    with _xr2:
-        st.markdown("**Exit Conditions**")
-        for _cc2 in st.session_state.opt_exit_rule.conditions:
-            st.code(f"{_cc2.left}  {_cc2.operator}  {_cc2.right}", language=None)
-        if st.session_state.opt_exit_rule.is_empty():
-            st.caption("_(No conditions set)_")
-
-    st.divider()
-
-    # ── Backtest settings ────────────────────────────────────────────────────
-    st.subheader("📅 Backtest Settings")
-    _bd1, _bd2 = st.columns(2)
-    with _bd1:
-        _bt_start = st.date_input("Start Date", pd.Timestamp("2022-01-01"), key="opt_bt_start")
-    with _bd2:
-        _bt_end = st.date_input("End Date", pd.Timestamp.today(), key="opt_bt_end")
-
-    # Dhan client
+    # â”€â”€ DHAN AUTH GATE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     _dhan_cl = st.session_state.get("dhan_client", None)
     if _dhan_cl is None:
-        st.warning("⚠️ Dhan not authenticated — Black-Scholes + India VIX will be used for option pricing. "
-                   "Authenticate via **🔐 Dhan Auth** tab for live pricing.")
+        st.error("""
+        **ðŸ” Dhan Authentication Required**
+
+        Options Backtest requires Dhan API access to fetch historical options data
+        (expired option premiums via the Rolling Options API).
+
+        **Black-Scholes pricing is not supported** â€” real option prices are used exclusively.
+        """)
+        if st.button("ðŸ” Go to Dhan Auth Tab", type="primary", key="opt_goto_auth"):
+            st.info("ðŸ‘† Click the **ðŸ” Dhan Auth** tab above to authenticate.")
+        st.stop()
+
+    # â”€â”€ MODE SWITCH â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    st.markdown("### Step 1 â€” Choose Mode")
+    _mc1, _mc2 = st.columns(2)
+    if "opt_mode" not in st.session_state:
+        st.session_state["opt_mode"] = "INDEX"
+
+    with _mc1:
+        _idx_type = "primary" if st.session_state["opt_mode"] == "INDEX" else "secondary"
+        if st.button("ðŸ“Š INDEX Based (NIFTY)", use_container_width=True,
+                     type=_idx_type, key="opt_mode_idx"):
+            st.session_state["opt_mode"] = "INDEX"
+            st.rerun()
+    with _mc2:
+        _opt_type = "primary" if st.session_state["opt_mode"] == "OPTION" else "secondary"
+        if st.button("ðŸ“ˆ Option Based", use_container_width=True,
+                     type=_opt_type, key="opt_mode_opt"):
+            st.session_state["opt_mode"] = "OPTION"
+            st.rerun()
+
+    if st.session_state["opt_mode"] == "OPTION":
+        st.info("ðŸ”§ **Option Based mode** is currently under development. Please use **INDEX Based** mode.")
+        st.stop()
 
     st.divider()
 
-    # ── Run ──────────────────────────────────────────────────────────────────
-    if st.button("🚀 Run Options Backtest", type="primary", key="opt_run_btn"):
-        _o_entry = st.session_state.opt_entry_rule
-        _o_exit  = st.session_state.opt_exit_rule
-        if _o_entry.is_empty():
-            st.error("Please select a signal template or import rules from the Scanner tab.")
-        else:
-            with st.spinner("Running NIFTY options backtest..."):
-                _o_engine = OptionsBacktestEngine(
-                    entry_rule=_o_entry,
-                    exit_rule=_o_exit,
-                    strategy_name=_opt_strat,
-                    custom_legs=_custom_legs,
-                    start_date=str(_bt_start),
-                    end_date=str(_bt_end),
-                    initial_capital=float(_opt_cap),
-                    dhan_client=_dhan_cl,
-                    lot_size=NIFTY_LOT_SIZE,
-                    use_vix=_opt_vix,
-                )
-                _o_result = _o_engine.run()
-            st.session_state.opt_result = _o_result
-            st.success("✅ Options backtest complete!")
+    # â”€â”€ STEP 2: SIGNAL BUILDER (streak.tech style) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    st.markdown("### Step 2 â€” Signal Builder")
+    st.caption("Build conditions on NIFTY index indicators. Each condition checks the **previous closed bar** of the selected timeframe.")
 
-    # ── Results ──────────────────────────────────────────────────────────────
-    if st.session_state.get("opt_result"):
-        _or = st.session_state.opt_result
-        _om = _or.get("metrics", {})
-        _otrades = _or.get("trades_df", pd.DataFrame())
-        _oeq     = _or.get("equity_df", pd.DataFrame())
-        _oudf    = _or.get("underlying_df", pd.DataFrame())
+    # â”€â”€ Initialise session state lists â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    for _sk in ["opt_entry_conds", "opt_exit_conds"]:
+        if _sk not in st.session_state:
+            st.session_state[_sk] = []
+    for _sk in ["opt_entry_logic", "opt_exit_logic"]:
+        if _sk not in st.session_state:
+            st.session_state[_sk] = "AND"
+
+    ALL_TIMEFRAMES = list(INTRADAY_INTERVALS.keys()) + list(DAILY_INTERVALS)
+
+    def _render_operand_picker(prefix: str, default_op: dict | None = None) -> dict:
+        """Render a streak.tech-style operand picker. Returns a dict for Operand.from_dict()."""
+        d = default_op or {}
+        kind_opts = ["Price / OHLCV", "Indicator", "Fixed Value"]
+        kind_map  = {"Price / OHLCV": "price", "Indicator": "indicator", "Fixed Value": "value"}
+        kind_rev  = {v: k for k, v in kind_map.items()}
+        default_kind = kind_rev.get(d.get("kind", "price"), "Price / OHLCV")
+        kind_ui = st.selectbox("Type", kind_opts,
+                               index=kind_opts.index(default_kind),
+                               key=f"{prefix}_kind", label_visibility="collapsed")
+        kind = kind_map[kind_ui]
+
+        if kind == "value":
+            val = st.number_input("Value", value=float(d.get("value", 50.0)),
+                                  key=f"{prefix}_val", label_visibility="collapsed")
+            return {"kind": "value", "value": val, "timeframe": "1D"}
+
+        tf_opts = ALL_TIMEFRAMES
+        tf_default = d.get("timeframe", "1D")
+        tf_idx = tf_opts.index(tf_default) if tf_default in tf_opts else tf_opts.index("1D")
+
+        if kind == "price":
+            c1, c2 = st.columns(2)
+            with c1:
+                pf_default = d.get("price_field", "Close")
+                pf_idx = PRICE_FIELDS.index(pf_default) if pf_default in PRICE_FIELDS else 0
+                pf = st.selectbox("Field", PRICE_FIELDS, index=pf_idx,
+                                  key=f"{prefix}_pf", label_visibility="collapsed")
+            with c2:
+                tf = st.selectbox("Timeframe", tf_opts, index=tf_idx,
+                                  key=f"{prefix}_tf", label_visibility="collapsed")
+            return {"kind": "price", "price_field": pf, "timeframe": tf}
+
+        # indicator
+        ind_names = list(INDICATOR_DEFS.keys())
+        ind_default = d.get("indicator", "EMA")
+        ind_idx = ind_names.index(ind_default) if ind_default in ind_names else 0
+        schema = INDICATOR_DEFS.get(ind_default, {})
+
+        col_ind, col_tf = st.columns([2, 1])
+        with col_ind:
+            ind = st.selectbox("Indicator", ind_names, index=ind_idx,
+                               key=f"{prefix}_ind", label_visibility="collapsed")
+        with col_tf:
+            tf = st.selectbox("TF", tf_opts, index=tf_idx,
+                              key=f"{prefix}_tf2", label_visibility="collapsed")
+
+        schema = INDICATOR_DEFS.get(ind, {})
+        result = {"kind": "indicator", "indicator": ind, "timeframe": tf}
+
+        param_cols = []
+        if schema.get("source"):
+            param_cols.append(("Source", "source", "selectbox", PRICE_FIELDS, d.get("source", "Close")))
+        if schema.get("period"):
+            param_cols.append(("Period", "period", "number", None, int(d.get("period", 20))))
+        if schema.get("period2"):
+            label2 = "Mult" if ind == "SuperTrend" else ("Slow" if ind.startswith("MACD") else "StdDev/Smooth")
+            param_cols.append((label2, "period2", "number_float", None, float(d.get("period2", 2.0))))
+        if schema.get("period3"):
+            param_cols.append(("Signal", "period3", "number", None, int(d.get("period3", 9))))
+
+        if param_cols:
+            pcols = st.columns(len(param_cols))
+            for _pi, (lbl, key, ptype, opts, defval) in enumerate(param_cols):
+                with pcols[_pi]:
+                    if ptype == "selectbox":
+                        defidx = opts.index(defval) if defval in opts else 0
+                        result[key] = st.selectbox(lbl, opts, index=defidx,
+                                                   key=f"{prefix}_{key}", label_visibility="collapsed")
+                    elif ptype == "number_float":
+                        result[key] = st.number_input(lbl, value=defval, step=0.5,
+                                                      key=f"{prefix}_{key}", label_visibility="collapsed")
+                    else:
+                        result[key] = st.number_input(lbl, value=defval, step=1, min_value=1,
+                                                      key=f"{prefix}_{key}", label_visibility="collapsed")
+
+        return result
+
+    def _rule_builder_ui(label: str, cond_key: str, logic_key: str):
+        """Renders the streak.tech-style rule builder. Returns MultiTFRule."""
+        conds = st.session_state.get(cond_key, [])
+
+        col_add, col_logic, _ = st.columns([1, 1, 3])
+        with col_add:
+            if st.button(f"âž• Add Condition", key=f"{cond_key}_add"):
+                conds.append({
+                    "left":  {"kind": "indicator", "indicator": "EMA", "source": "Close",
+                               "period": 20, "period2": 2.0, "period3": 9, "timeframe": "1D"},
+                    "operator": ">",
+                    "right": {"kind": "price", "price_field": "Close", "timeframe": "1D"},
+                })
+                st.session_state[cond_key] = conds
+                st.rerun()
+        with col_logic:
+            logic = st.selectbox("Logic between conditions", ["AND", "OR"],
+                                 index=0 if st.session_state.get(logic_key, "AND") == "AND" else 1,
+                                 key=f"{logic_key}_sel")
+            st.session_state[logic_key] = logic
+
+        del_idx = None
+        for i, cond_d in enumerate(conds):
+            with st.container(border=True):
+                st.caption(f"Condition {i + 1}")
+                c_left, c_op, c_right, c_del = st.columns([2.5, 1, 2.5, 0.4])
+                with c_left:
+                    st.caption("**Left**")
+                    left_d  = _render_operand_picker(f"{cond_key}_l{i}", cond_d.get("left"))
+                with c_op:
+                    st.caption("**Op**")
+                    op_idx = OPERATORS.index(cond_d.get("operator", ">")) if cond_d.get("operator") in OPERATORS else 0
+                    op = st.selectbox("Op", OPERATORS, index=op_idx,
+                                      key=f"{cond_key}_op{i}", label_visibility="collapsed")
+                with c_right:
+                    st.caption("**Right**")
+                    right_d = _render_operand_picker(f"{cond_key}_r{i}", cond_d.get("right"))
+                with c_del:
+                    st.markdown("<br/>", unsafe_allow_html=True)
+                    if st.button("âœ•", key=f"{cond_key}_del{i}"):
+                        del_idx = i
+
+                conds[i] = {"left": left_d, "operator": op, "right": right_d}
+                # Show label preview
+                try:
+                    _lo = Operand.from_dict(left_d)
+                    _ro = Operand.from_dict(right_d)
+                    st.caption(f"ðŸ“Œ `{_lo.label()} {op} {_ro.label()}`")
+                except Exception:
+                    pass
+
+        if del_idx is not None:
+            conds.pop(del_idx)
+            st.session_state[cond_key] = conds
+            st.rerun()
+        st.session_state[cond_key] = conds
+
+        # Build MultiTFRule
+        rule_conds = []
+        for cd in conds:
+            try:
+                rule_conds.append(MultiTFCondition(
+                    left=Operand.from_dict(cd["left"]),
+                    operator=cd["operator"],
+                    right=Operand.from_dict(cd["right"]),
+                ))
+            except Exception:
+                pass
+        return MultiTFRule(conditions=rule_conds, logic=st.session_state.get(logic_key, "AND"))
+
+    _e_tab, _x_tab = st.tabs(["ðŸŸ¢ Entry Conditions", "ðŸ”´ Exit Conditions"])
+    with _e_tab:
+        _entry_rule = _rule_builder_ui("Entry", "opt_entry_conds", "opt_entry_logic")
+    with _x_tab:
+        _exit_rule  = _rule_builder_ui("Exit",  "opt_exit_conds",  "opt_exit_logic")
+
+    st.divider()
+
+    # â”€â”€ STEP 3: STRIKE & STRATEGY â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    st.markdown("### Step 3 â€” Strike & Strategy")
+    _sc1, _sc2, _sc3, _sc4 = st.columns(4)
+    with _sc1:
+        _opt_type_sel = st.selectbox("Option Type", ["CE (Call)", "PE (Put)", "Straddle (CE+PE)"],
+                                     key="opt_type_sel")
+    with _sc2:
+        _strike_presets = ["ATM", "ATM+1 (+50)", "ATM-1 (-50)", "ATM+2 (+100)",
+                           "ATM-2 (-100)", "ATM+3 (+150)", "ATM-3 (-150)"]
+        _strike_offset_map = {"ATM": 0, "ATM+1 (+50)": 1, "ATM-1 (-50)": -1,
+                               "ATM+2 (+100)": 2, "ATM-2 (-100)": -2,
+                               "ATM+3 (+150)": 3, "ATM-3 (-150)": -3}
+        _strike_sel = st.selectbox("Strike", _strike_presets, key="opt_strike_sel")
+        _strike_offset = _strike_offset_map[_strike_sel]
+    with _sc3:
+        _expiry_type = st.selectbox("Expiry", ["WEEKLY", "MONTHLY"], key="opt_expiry_type")
+    with _sc4:
+        _opt_lots = st.number_input("Lots", 1, 50, 1, key="opt_lots2")
+
+    _opt_cap = st.number_input("Initial Capital (â‚¹)", 100_000, 10_000_000, 500_000,
+                               step=50_000, key="opt_cap2")
+
+    st.divider()
+
+    # â”€â”€ STEP 4: PERIOD SELECTION â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    st.markdown("### Step 4 â€” Backtest Period")
+    _period_presets = {
+        "1 Week":   7,   "1 Month":  30,  "3 Months":  90,
+        "6 Months": 180, "1 Year":   365, "5 Years":  1825, "10 Years": 3650,
+    }
+    if "opt_period_sel" not in st.session_state:
+        st.session_state["opt_period_sel"] = "1 Year"
+
+    _pcols = st.columns(len(_period_presets))
+    for _pi, (_plabel, _pdays) in enumerate(_period_presets.items()):
+        with _pcols[_pi]:
+            _is_sel = st.session_state["opt_period_sel"] == _plabel
+            _btn_type = "primary" if _is_sel else "secondary"
+            if st.button(_plabel, use_container_width=True, type=_btn_type,
+                         key=f"opt_period_{_pi}"):
+                st.session_state["opt_period_sel"] = _plabel
+                st.rerun()
+
+    _today = _date2.today()
+    _bt_end   = _today
+    _bt_start = _today - _td2(days=_period_presets[st.session_state["opt_period_sel"]])
+    st.caption(f"ðŸ“… Backtest: **{_bt_start}** â†’ **{_bt_end}** "
+               f"({_period_presets[st.session_state['opt_period_sel']]} days)")
+
+    st.divider()
+
+    # â”€â”€ STEP 5: REGIME FILTER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    st.markdown("### Step 5 â€” Regime Filter *(optional)*")
+    with st.expander("âš™ï¸ Configure Regime Filter", expanded=False):
+        st.caption("When regime is bearish/triggered â†’ **skip new trades** (existing positions held to exit signal).")
+        _rf_opts = ["None", "EMA 68 1D", "SMA 200 1D", "SuperTrend 1D", "MACD Positive 1D",
+                    "EMA 20 > EMA 50 1D", "Close > EMA 68 Weekly"]
+        _rf_sel = st.multiselect("Active Regime Filters (ALL must be satisfied to allow entry)",
+                                 _rf_opts[1:], default=[], key="opt_regime_filters")
+        _regime_filters = _rf_sel
+
+    st.divider()
+
+    # â”€â”€ STEP 6: RISK MANAGEMENT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    st.markdown("### Step 6 â€” Risk Management *(optional)*")
+    with st.expander("ðŸ›¡ï¸ Configure Risk Management", expanded=False):
+        _rm1, _rm2, _rm3, _rm4 = st.columns(4)
+        with _rm1:
+            _sl_pct = st.number_input("Stop Loss (% of premium)", 0.0, 100.0, 50.0,
+                                      step=5.0, key="opt_sl_pct",
+                                      help="Exit if option loses X% of entry premium")
+        with _rm2:
+            _tp_pct = st.number_input("Target (% of premium)", 0.0, 500.0, 100.0,
+                                      step=10.0, key="opt_tp_pct",
+                                      help="Exit if option gains X% of entry premium")
+        with _rm3:
+            _max_hold = st.number_input("Max Holding (days)", 0, 30, 0, step=1,
+                                        key="opt_max_hold",
+                                        help="0 = hold until exit signal")
+        with _rm4:
+            _max_dd_pct = st.number_input("Max Portfolio Drawdown (%)", 0.0, 50.0, 20.0,
+                                           step=2.5, key="opt_max_dd",
+                                           help="Stop new trades if drawdown exceeds this")
+
+    st.divider()
+
+    # â”€â”€ RUN BUTTON â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    _run_col2, _clr_col2, _ = st.columns([1, 1, 4])
+    with _run_col2:
+        _run_opt = st.button("ðŸš€ Run Options Backtest", type="primary", key="opt_run_btn2")
+    with _clr_col2:
+        if st.button("ðŸ”„ Reset Results", key="opt_clr_btn"):
+            st.session_state.pop("opt_result2", None)
+            st.rerun()
+
+    # â”€â”€ EXECUTION â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    if _run_opt:
+        if _entry_rule.is_empty():
+            st.error("âš ï¸ Add at least one Entry Condition before running.")
+        elif _exit_rule.is_empty():
+            st.error("âš ï¸ Add at least one Exit Condition before running.")
+        else:
+            import math as _math
+            from nifty_put_hedge import (
+                fetch_rolling_options_data as _fetch_opts,
+                get_atm_strike as _get_atm,
+                get_nifty_lot_size as _get_lot_sz,
+                get_next_expiry as _get_expiry,
+                DATA_AVAILABLE_FROM as _OPT_AVAIL_FROM,
+            )
+
+            # Clamp start date to options data availability
+            _eff_start = max(_bt_start, _OPT_AVAIL_FROM)
+            if _eff_start > _bt_end:
+                st.error(f"âš ï¸ Options data only available from {_OPT_AVAIL_FROM}. Please choose a period within the last 5 years.")
+                st.stop()
+
+            _prog_ph   = st.progress(0, "ðŸ” Initialising...")
+            _status_ph = st.empty()
+
+            try:
+                # â”€â”€ 1. Fetch signals via MultiTFEngine â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+                def _sig_prog(cur, total, label):
+                    _prog_ph.progress(int(cur / max(total, 1) * 40), f"ðŸ“¡ {label}")
+                    _status_ph.caption(label)
+
+                _sig_engine = MultiTFEngine(
+                    start_date=str(_eff_start),
+                    end_date=str(_bt_end),
+                    entry_rule=_entry_rule,
+                    exit_rule=_exit_rule,
+                    dhan_client=_dhan_cl,
+                )
+                _sig_result = _sig_engine.run(progress_callback=_sig_prog)
+                _entry_sigs = _sig_result["entry_signals"]
+                _exit_sigs  = _sig_result["exit_signals"]
+                _daily_df   = _sig_result["daily_df"]
+
+                _prog_ph.progress(40, "ðŸ“¦ Fetching options data...")
+                _status_ph.caption("Fetching Dhan rolling options data...")
+
+                # â”€â”€ 2. Fetch rolled options data â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+                _opt_types_to_fetch = []
+                if "CE" in _opt_type_sel:
+                    _opt_types_to_fetch.append("CALL")
+                if "PE" in _opt_type_sel:
+                    _opt_types_to_fetch.append("PUT")
+
+                _opt_dfs = {}
+                for _ot_i, _ot in enumerate(_opt_types_to_fetch):
+                    _status_ph.caption(f"Fetching Dhan {_ot} options data...")
+
+                    # Use the existing fetch_rolling_options_data from nifty_put_hedge.py
+                    # but extend it to support CALL as well
+                    import time as _time_mod
+                    import requests as _req_mod
+                    from datetime import date as _dt2, timedelta as _tdmod
+                    DHAN_ROLL_URL = "https://api.dhan.co/v2/charts/rollingoption"
+
+                    def _fetch_opt_chunk(from_d, to_d, opt_type):
+                        """Fetch one chunk of rolling options data for CALL or PUT."""
+                        from nifty_put_hedge import _parse_rolling_response
+                        drv_type = "CALL" if opt_type == "CALL" else "PUT"
+                        payload = {
+                            "exchangeSegment": "NSE_FNO",
+                            "instrument": "OPTIDX",
+                            "drvOptionType": drv_type,
+                            "fromDate": from_d.strftime("%Y-%m-%d"),
+                            "toDate":   to_d.strftime("%Y-%m-%d"),
+                            "strike":   "ATM",
+                            "expiryType": _expiry_type,
+                        }
+                        # Try SDK
+                        try:
+                            resp = _dhan_cl.rolling_options_data(
+                                exchange_segment="NSE_FNO",
+                                instrument="OPTIDX",
+                                drvOptionType=drv_type,
+                                fromDate=from_d.strftime("%Y-%m-%d"),
+                                toDate=to_d.strftime("%Y-%m-%d"),
+                                strike="ATM",
+                                expiryType=_expiry_type,
+                            )
+                            if isinstance(resp, dict) and resp.get("status") == "success":
+                                return _parse_rolling_response(resp)
+                        except Exception:
+                            pass
+                        # REST fallback
+                        try:
+                            from config import get_saved_credentials
+                            creds = get_saved_credentials()
+                            headers = {
+                                "access-token": creds.get("access_token", ""),
+                                "client-id":    creds.get("client_id", ""),
+                                "Content-Type": "application/json",
+                            }
+                            r = _req_mod.post(DHAN_ROLL_URL, json=payload, headers=headers, timeout=30)
+                            if r.status_code == 200:
+                                return _parse_rolling_response(r.json())
+                        except Exception:
+                            pass
+                        return pd.DataFrame()
+
+                    # Chunk into 30-day windows
+                    _chunks_opt = []
+                    _c_cur = _eff_start
+                    while _c_cur <= _bt_end:
+                        _c_end = min(_c_cur + _tdmod(days=29), _bt_end)
+                        _chunks_opt.append((_c_cur, _c_end))
+                        _c_cur = _c_end + _tdmod(days=1)
+
+                    _all_opt_frames = []
+                    for _ci, (_cf, _ct) in enumerate(_chunks_opt):
+                        _cdf = _fetch_opt_chunk(_cf, _ct, _ot)
+                        if not _cdf.empty:
+                            _all_opt_frames.append(_cdf)
+                        if _ci < len(_chunks_opt) - 1:
+                            _time_mod.sleep(0.5)
+
+                    if _all_opt_frames:
+                        _combined_opt = pd.concat(_all_opt_frames)
+                        _combined_opt = _combined_opt[~_combined_opt.index.duplicated(keep="last")].sort_index()
+                        _opt_dfs[_ot] = _combined_opt
+                    else:
+                        st.warning(f"âš ï¸ No {_ot} options data returned from Dhan. "
+                                   f"Strike offset is applied to ATM from Spot column.")
+
+                    _prog_ph.progress(40 + int((_ot_i + 1) / len(_opt_types_to_fetch) * 30),
+                                      f"ðŸ“¦ {_ot} data fetched")
+
+                # â”€â”€ 3. Simulate Trades â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+                _prog_ph.progress(72, "âš™ï¸ Simulating trades...")
+                _status_ph.caption("Running backtest simulation...")
+
+                NIFTY_STEP = 50
+                _capital   = float(_opt_cap)
+                _in_trade  = False
+                _entry_info = {}
+                _trades     = []
+                _equity_curve = []
+                _max_equity  = _capital
+
+                def _lookup_premium(opt_df, spot, date, offset, opt_type_key):
+                    """Look up option premium from the options DataFrame."""
+                    if opt_df is None or opt_df.empty:
+                        return None
+                    # ATM from spot + offset Ã— step
+                    target_strike = round(spot / NIFTY_STEP) * NIFTY_STEP + offset * NIFTY_STEP
+                    ts = pd.Timestamp(date)
+                    if ts in opt_df.index:
+                        return float(opt_df.loc[ts, "Close"]) if opt_df.loc[ts, "Close"] > 0 else None
+                    # Try nearest within Â±3 days
+                    try:
+                        nearest = opt_df.index.asof(ts)
+                        if not pd.isna(nearest) and abs((ts - nearest).days) <= 3:
+                            val = opt_df.loc[nearest, "Close"]
+                            return float(val) if pd.notna(val) and float(val) > 0 else None
+                    except Exception:
+                        pass
+                    return None
+
+                # Build combined daily df aligned to signal index
+                _all_dates = _entry_sigs.index
+
+                for _trade_dt in _all_dates:
+                    _spot_val = 0.0
+                    try:
+                        if _trade_dt in _daily_df.index:
+                            _spot_val = float(_daily_df.loc[_trade_dt, "Close"])
+                        elif hasattr(_daily_df.index, "asof"):
+                            _nd = _daily_df.index.asof(_trade_dt)
+                            if not pd.isna(_nd):
+                                _spot_val = float(_daily_df.loc[_nd, "Close"])
+                    except Exception:
+                        pass
+
+                    # Mark-to-market
+                    if _in_trade:
+                        _cur_pnl = 0.0
+                        for _leg_inf in _entry_info.get("legs", []):
+                            _ep = _leg_inf["entry_premium"]
+                            _ldf = _opt_dfs.get(_leg_inf["opt_type"])
+                            _cp = _lookup_premium(_ldf, _spot_val, _trade_dt,
+                                                  _strike_offset, _leg_inf["opt_type"])
+                            if _cp is None:
+                                _cp = _ep  # hold value if no data
+                            _cur_pnl += (_cp - _ep) * _leg_inf["lot_size"] * _leg_inf["lots"]
+                        _cur_equity = _capital + _cur_pnl
+                    else:
+                        _cur_equity = _capital
+                    _equity_curve.append({"Date": _trade_dt, "Equity": _cur_equity})
+                    _max_equity = max(_max_equity, _cur_equity)
+
+                    # Max drawdown check â†’ stop new entries
+                    _dd_now = (_max_equity - _cur_equity) / _max_equity * 100 if _max_equity > 0 else 0
+                    _dd_breach = _dd_now > _max_dd_pct and _max_dd_pct > 0
+
+                    # Check exit
+                    if _in_trade:
+                        _should_exit = bool(_exit_sigs.get(_trade_dt, False))
+                        # Stop loss / target check
+                        if not _should_exit and _in_trade:
+                            _total_ep = sum(l["entry_premium"] for l in _entry_info.get("legs", []))
+                            _pnl_pct_now = (_cur_pnl / (_total_ep * _entry_info.get("lot_size", NIFTY_LOT_SIZE) + 1e-9)) * 100
+                            if _sl_pct > 0 and _pnl_pct_now <= -_sl_pct:
+                                _should_exit = True
+                                _entry_info["exit_reason"] = f"SL {_sl_pct:.0f}%"
+                            if _tp_pct > 0 and _pnl_pct_now >= _tp_pct:
+                                _should_exit = True
+                                _entry_info["exit_reason"] = f"Target {_tp_pct:.0f}%"
+                        # Max holding days
+                        if not _should_exit and _max_hold > 0:
+                            _held = (_trade_dt - _entry_info.get("entry_date", _trade_dt)).days
+                            if _held >= _max_hold:
+                                _should_exit = True
+                                _entry_info["exit_reason"] = f"MaxHold {_max_hold}d"
+
+                        if _should_exit:
+                            _exit_pnl = _cur_pnl
+                            _capital  += _exit_pnl
+                            _trades.append({
+                                "entry_date":   _entry_info["entry_date"],
+                                "exit_date":    _trade_dt,
+                                "entry_spot":   _entry_info["entry_spot"],
+                                "exit_spot":    _spot_val,
+                                "option_type":  _opt_type_sel,
+                                "strike_offset": _strike_offset,
+                                "expiry_type":  _expiry_type,
+                                "lots":         _opt_lots,
+                                "entry_premium": sum(l["entry_premium"] for l in _entry_info["legs"]),
+                                "exit_pnl_inr": round(_exit_pnl, 2),
+                                "pnl_pct":      round(_exit_pnl / (abs(_cur_pnl) + 1e-9) * 100, 1),
+                                "exit_reason":  _entry_info.get("exit_reason", "Signal"),
+                            })
+                            _in_trade = False
+
+                    # Check entry (only if not in trade and not in drawdown breach)
+                    if not _in_trade and bool(_entry_sigs.get(_trade_dt, False)) and not _dd_breach:
+                        _legs_info = []
+                        _leg_types = []
+                        if "CE" in _opt_type_sel or "Straddle" in _opt_type_sel:
+                            _leg_types.append("CALL")
+                        if "PE" in _opt_type_sel or "Straddle" in _opt_type_sel:
+                            _leg_types.append("PUT")
+
+                        _all_legs_ok = True
+                        for _lt in _leg_types:
+                            _ldf = _opt_dfs.get(_lt)
+                            _ep = _lookup_premium(_ldf, _spot_val, _trade_dt, _strike_offset, _lt)
+                            if _ep is None or _ep <= 0:
+                                _all_legs_ok = False
+                                break
+                            _lot_sz = _get_lot_sz(_trade_dt)
+                            _legs_info.append({
+                                "opt_type":      _lt,
+                                "entry_premium": _ep,
+                                "lot_size":      _lot_sz,
+                                "lots":          _opt_lots,
+                                "strike_offset": _strike_offset,
+                            })
+
+                        if _all_legs_ok and _legs_info:
+                            _in_trade = True
+                            _entry_info = {
+                                "entry_date":  _trade_dt,
+                                "entry_spot":  _spot_val,
+                                "legs":        _legs_info,
+                                "lot_size":    _legs_info[0]["lot_size"],
+                                "exit_reason": "Signal",
+                            }
+
+                # Close open position at end
+                if _in_trade and _all_dates is not None and len(_all_dates) > 0:
+                    _last_dt   = _all_dates[-1]
+                    _last_spot = float(_daily_df.iloc[-1]["Close"]) if not _daily_df.empty else 0.0
+                    _final_pnl = 0.0
+                    for _leg_inf in _entry_info.get("legs", []):
+                        _ep2 = _leg_inf["entry_premium"]
+                        _ldf = _opt_dfs.get(_leg_inf["opt_type"])
+                        _cp2 = _lookup_premium(_ldf, _last_spot, _last_dt, _strike_offset, _leg_inf["opt_type"])
+                        if _cp2 is None:
+                            _cp2 = _ep2
+                        _final_pnl += (_cp2 - _ep2) * _leg_inf["lot_size"] * _leg_inf["lots"]
+                    _capital += _final_pnl
+                    _trades.append({
+                        "entry_date":   _entry_info["entry_date"],
+                        "exit_date":    _last_dt,
+                        "entry_spot":   _entry_info["entry_spot"],
+                        "exit_spot":    _last_spot,
+                        "option_type":  _opt_type_sel,
+                        "strike_offset": _strike_offset,
+                        "expiry_type":  _expiry_type,
+                        "lots":         _opt_lots,
+                        "entry_premium": sum(l["entry_premium"] for l in _entry_info["legs"]),
+                        "exit_pnl_inr": round(_final_pnl, 2),
+                        "pnl_pct":      0.0,
+                        "exit_reason":  "End of Period",
+                    })
+
+                # â”€â”€ 4. Compute metrics â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+                _trades_df = pd.DataFrame(_trades)
+                _eq_df     = pd.DataFrame(_equity_curve).set_index("Date") if _equity_curve else pd.DataFrame()
+
+                _metrics = {}
+                if not _trades_df.empty:
+                    _total_pnl = _trades_df["exit_pnl_inr"].sum()
+                    _wins = _trades_df[_trades_df["exit_pnl_inr"] > 0]
+                    _metrics = {
+                        "Total Trades":    len(_trades_df),
+                        "Win Rate (%)":    round(len(_wins) / len(_trades_df) * 100, 1),
+                        "Total P&L (INR)": round(_total_pnl, 0),
+                        "Total Return (%)": round(_total_pnl / float(_opt_cap) * 100, 2),
+                        "Avg P&L / Trade":  round(_trades_df["exit_pnl_inr"].mean(), 0),
+                        "Best Trade (INR)": round(_trades_df["exit_pnl_inr"].max(), 0),
+                        "Worst Trade (INR)": round(_trades_df["exit_pnl_inr"].min(), 0),
+                    }
+                    if not _eq_df.empty:
+                        _eq_s = _eq_df["Equity"]
+                        _run_max = _eq_s.cummax()
+                        _dd_s    = (_eq_s - _run_max) / _run_max
+                        _metrics["Max Drawdown (%)"] = round(float(_dd_s.min() * 100), 2)
+                        _dr = _eq_s.pct_change().dropna()
+                        _metrics["Sharpe Ratio"] = round(
+                            float(_dr.mean() / (_dr.std() + 1e-9) * (252 ** 0.5)), 2
+                        ) if len(_dr) > 1 else 0.0
+
+                _prog_ph.progress(100, "âœ… Done!")
+                st.session_state["opt_result2"] = {
+                    "trades_df":  _trades_df,
+                    "equity_df":  _eq_df,
+                    "daily_df":   _daily_df,
+                    "entry_sigs": _entry_sigs,
+                    "exit_sigs":  _exit_sigs,
+                    "metrics":    _metrics,
+                }
+                st.success(f"âœ… Backtest complete! {len(_trades)} trades simulated.")
+
+            except Exception as _ex:
+                _prog_ph.empty()
+                st.error(f"âŒ Backtest failed: {_ex}")
+                import traceback
+                st.expander("ðŸ” Error Details").code(traceback.format_exc())
+
+    # â”€â”€ RESULTS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    if st.session_state.get("opt_result2"):
+        _or2  = st.session_state["opt_result2"]
+        _om2  = _or2.get("metrics", {})
+        _ot2  = _or2.get("trades_df", pd.DataFrame())
+        _oeq2 = _or2.get("equity_df", pd.DataFrame())
+        _oudf = _or2.get("daily_df",  pd.DataFrame())
+        _e_s  = _or2.get("entry_sigs", pd.Series(dtype=bool))
+        _x_s  = _or2.get("exit_sigs",  pd.Series(dtype=bool))
 
         st.divider()
-        st.subheader("📊 Backtest Results")
+        st.markdown("### ðŸ“Š Backtest Results")
 
-        # KPIs
-        _ok1, _ok2, _ok3, _ok4 = st.columns(4)
-        _ok1.metric("Total P&L",    f"₹{_om.get('Total P&L (INR)', 0):,.0f}")
-        _ok2.metric("Total Return", f"{_om.get('Total Return (%)', 0):.1f}%")
-        _ok3.metric("Win Rate",     f"{_om.get('Win Rate (%)', 0):.0f}%")
-        _ok4.metric("Max Drawdown", f"{_om.get('Max Drawdown (%)', 0):.1f}%")
-        _ok5, _ok6, _ok7, _ok8 = st.columns(4)
-        _ok5.metric("Trades",       _om.get("Total Trades", 0))
-        _ok6.metric("Sharpe",       f"{_om.get('Sharpe Ratio', 0):.2f}")
-        _ok7.metric("Best Trade",   f"₹{_om.get('Best Trade (INR)', 0):,.0f}")
-        _ok8.metric("Worst Trade",  f"₹{_om.get('Worst Trade (INR)', 0):,.0f}")
+        # KPI row 1
+        _k1, _k2, _k3, _k4 = st.columns(4)
+        _k1.metric("Total P&L",    f"â‚¹{_om2.get('Total P&L (INR)', 0):,.0f}")
+        _k2.metric("Total Return",  f"{_om2.get('Total Return (%)', 0):.2f}%")
+        _k3.metric("Win Rate",      f"{_om2.get('Win Rate (%)', 0):.1f}%")
+        _k4.metric("Max Drawdown",  f"{_om2.get('Max Drawdown (%)', 0):.1f}%")
+        _k5, _k6, _k7, _k8 = st.columns(4)
+        _k5.metric("Trades",        _om2.get("Total Trades", 0))
+        _k6.metric("Sharpe",        f"{_om2.get('Sharpe Ratio', 0):.2f}")
+        _k7.metric("Best Trade",    f"â‚¹{_om2.get('Best Trade (INR)', 0):,.0f}")
+        _k8.metric("Worst Trade",   f"â‚¹{_om2.get('Worst Trade (INR)', 0):,.0f}")
+
+        # NIFTY chart with signals
+        if not _oudf.empty:
+            st.markdown("#### ðŸ“ˆ NIFTY Index + Signals")
+            _cfig = _opgo.Figure()
+            _cfig.add_trace(_opgo.Candlestick(
+                x=_oudf.index, open=_oudf["Open"], high=_oudf["High"],
+                low=_oudf["Low"], close=_oudf["Close"], name="NIFTY",
+                increasing_line_color="#00ff88", decreasing_line_color="#ff4444",
+            ))
+            _edates = [d for d in _e_s.index if _e_s.get(d, False)]
+            if _edates:
+                _ep_vals = [float(_oudf.loc[_oudf.index.asof(pd.Timestamp(d)), "Low"]) * 0.993
+                            if _oudf.index.asof(pd.Timestamp(d)) is not pd.NaT else 0
+                            for d in _edates]
+                _cfig.add_trace(_opgo.Scatter(
+                    x=_edates, y=_ep_vals, mode="markers", name="Entry",
+                    marker=dict(symbol="triangle-up", color="#00ff88", size=13, line=dict(width=1, color="white")),
+                ))
+            _xdates = [d for d in _x_s.index if _x_s.get(d, False)]
+            if _xdates:
+                _xp_vals = [float(_oudf.loc[_oudf.index.asof(pd.Timestamp(d)), "High"]) * 1.007
+                            if _oudf.index.asof(pd.Timestamp(d)) is not pd.NaT else 0
+                            for d in _xdates]
+                _cfig.add_trace(_opgo.Scatter(
+                    x=_xdates, y=_xp_vals, mode="markers", name="Exit",
+                    marker=dict(symbol="triangle-down", color="#ff4444", size=13, line=dict(width=1, color="white")),
+                ))
+            _cfig.update_layout(
+                plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)",
+                font_color="#e0e0e0", height=420,
+                xaxis_rangeslider_visible=False,
+                legend=dict(orientation="h", yanchor="bottom", y=1.02),
+            )
+            st.plotly_chart(_cfig, use_container_width=True)
 
         # Equity curve
-        if not _oeq.empty:
-            st.markdown("#### 📈 Equity Curve")
-            _efig = _go2.Figure()
-            _efig.add_trace(_go2.Scatter(
-                x=_oeq.index, y=_oeq["Equity"], mode="lines",
-                line=dict(color="#4a90e2", width=2),
-                fill="tozeroy", fillcolor="rgba(74,144,226,0.08)", name="Portfolio"))
-            _efig.update_layout(plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)",
-                                 font_color="#e0e0e0", height=380,
-                                 xaxis_title="Date", yaxis_title="Portfolio Value (₹)")
-            st.plotly_chart(_efig, use_container_width=True)
+        if not _oeq2.empty:
+            st.markdown("#### ðŸ’° Equity Curve")
+            _efig2 = _opgo.Figure()
+            _efig2.add_trace(_opgo.Scatter(
+                x=_oeq2.index, y=_oeq2["Equity"], mode="lines",
+                line=dict(color="#a78bfa", width=2),
+                fill="tozeroy", fillcolor="rgba(167,139,250,0.08)", name="Portfolio Value",
+            ))
+            _efig2.add_hline(y=float(_opt_cap), line_dash="dot", line_color="rgba(255,255,255,0.3)")
+            _efig2.update_layout(
+                plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)",
+                font_color="#e0e0e0", height=340,
+                xaxis_title="Date", yaxis_title="Portfolio Value (â‚¹)",
+            )
+            st.plotly_chart(_efig2, use_container_width=True)
 
         # Trade log
-        if not _otrades.empty:
-            st.markdown("#### 🗒️ Trade Log")
-            _td_cols = [c for c in ["entry_date", "exit_date", "entry_spot", "exit_spot",
-                                     "strategy", "legs_detail", "total_pnl_inr", "pnl_pct",
-                                     "exit_reason"] if c in _otrades.columns]
-            _td_disp = _otrades[_td_cols].copy()
-            _td_disp.columns = [c.replace("_", " ").title() for c in _td_cols]
+        if not _ot2.empty:
+            st.markdown("#### ðŸ—’ï¸ Trade Log")
+            _show_cols = [c for c in ["entry_date", "exit_date", "entry_spot", "exit_spot",
+                                       "option_type", "strike_offset", "lots",
+                                       "entry_premium", "exit_pnl_inr", "pnl_pct", "exit_reason"]
+                          if c in _ot2.columns]
+            _td_disp = _ot2[_show_cols].copy()
+            _td_disp.columns = [c.replace("_", " ").title() for c in _show_cols]
             st.dataframe(_td_disp, use_container_width=True, hide_index=True)
 
             # P&L bar chart
-            if "total_pnl_inr" in _otrades.columns:
-                _pfig = _go2.Figure(_go2.Bar(
-                    x=[str(d)[:10] for d in _otrades.get("entry_date", [])],
-                    y=_otrades["total_pnl_inr"],
-                    marker_color=["#00ff88" if p >= 0 else "#ff4444"
-                                  for p in _otrades["total_pnl_inr"]],
-                ))
-                _pfig.update_layout(title="P&L Per Trade",
-                                    plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)",
-                                    font_color="#e0e0e0", height=320)
-                st.plotly_chart(_pfig, use_container_width=True)
+            _bfig = _opgo.Figure(_opgo.Bar(
+                x=[str(d)[:10] for d in _ot2.get("entry_date", [])],
+                y=_ot2["exit_pnl_inr"],
+                marker_color=["#00ff88" if p >= 0 else "#ff4444" for p in _ot2["exit_pnl_inr"]],
+            ))
+            _bfig.update_layout(
+                title="P&L Per Trade (â‚¹)",
+                plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)",
+                font_color="#e0e0e0", height=300,
+            )
+            st.plotly_chart(_bfig, use_container_width=True)
 
-            st.download_button("⬇️ Download Trade Log", _otrades.to_csv(index=False),
-                               "nifty_options_trades.csv", "text/csv", key="opt_dl")
+            st.download_button("â¬‡ï¸ Download Trade Log CSV", _ot2.to_csv(index=False),
+                               "nifty_options_backtest.csv", "text/csv", key="opt_dl2")
