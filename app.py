@@ -3779,94 +3779,51 @@ with main_tabs[5]:
                 _prog_ph.progress(40, "📦 Fetching options data...")
                 _status_ph.caption("Fetching Dhan rolling options data...")
 
-                # ── 2. Fetch rolled options data ──────────────────────────────
+                # ── 2. Fetch rolled options data via fetch_rolling_options_generic ──
+                from nifty_put_hedge import fetch_rolling_options_generic as _fetch_opt_generic
+
                 _opt_types_to_fetch = []
-                if "CE" in _opt_type_sel:
+                if "CE" in _opt_type_sel or "Straddle" in _opt_type_sel:
                     _opt_types_to_fetch.append("CALL")
-                if "PE" in _opt_type_sel:
+                if "PE" in _opt_type_sel or "Straddle" in _opt_type_sel:
                     _opt_types_to_fetch.append("PUT")
 
                 _opt_dfs = {}
                 for _ot_i, _ot in enumerate(_opt_types_to_fetch):
-                    _status_ph.caption(f"Fetching Dhan {_ot} options data...")
+                    _status_ph.caption(f"📦 Fetching {_ot} {_expiry_type} options data from Dhan...")
 
-                    # Use the existing fetch_rolling_options_data from nifty_put_hedge.py
-                    # but extend it to support CALL as well
-                    import time as _time_mod
-                    import requests as _req_mod
-                    from datetime import date as _dt2, timedelta as _tdmod
-                    DHAN_ROLL_URL = "https://api.dhan.co/v2/charts/rollingoption"
+                    def _make_opt_prog(_ot_i=_ot_i, _ot=_ot):
+                        def _cb(cur, total, label):
+                            _pct = 40 + int(_ot_i / len(_opt_types_to_fetch) * 30) + int(cur / max(total, 1) * (30 // len(_opt_types_to_fetch)))
+                            _prog_ph.progress(min(_pct, 69), f"📦 {_ot}: {label}")
+                            _status_ph.caption(label)
+                        return _cb
 
-                    def _fetch_opt_chunk(from_d, to_d, opt_type):
-                        """Fetch one chunk of rolling options data for CALL or PUT."""
-                        from nifty_put_hedge import _parse_rolling_response
-                        drv_type = "CALL" if opt_type == "CALL" else "PUT"
-                        payload = {
-                            "exchangeSegment": "NSE_FNO",
-                            "instrument": "OPTIDX",
-                            "drvOptionType": drv_type,
-                            "fromDate": from_d.strftime("%Y-%m-%d"),
-                            "toDate":   to_d.strftime("%Y-%m-%d"),
-                            "strike":   "ATM",
-                            "expiryType": _expiry_type,
-                        }
-                        # Try SDK
-                        try:
-                            resp = _dhan_cl.rolling_options_data(
-                                exchange_segment="NSE_FNO",
-                                instrument="OPTIDX",
-                                drvOptionType=drv_type,
-                                fromDate=from_d.strftime("%Y-%m-%d"),
-                                toDate=to_d.strftime("%Y-%m-%d"),
-                                strike="ATM",
-                                expiryType=_expiry_type,
-                            )
-                            if isinstance(resp, dict) and resp.get("status") == "success":
-                                return _parse_rolling_response(resp)
-                        except Exception:
-                            pass
-                        # REST fallback
-                        try:
-                            from config import get_saved_credentials
-                            creds = get_saved_credentials()
-                            headers = {
-                                "access-token": creds.get("access_token", ""),
-                                "client-id":    creds.get("client_id", ""),
-                                "Content-Type": "application/json",
-                            }
-                            r = _req_mod.post(DHAN_ROLL_URL, json=payload, headers=headers, timeout=30)
-                            if r.status_code == 200:
-                                return _parse_rolling_response(r.json())
-                        except Exception:
-                            pass
-                        return pd.DataFrame()
+                    _opt_df_fetched = _fetch_opt_generic(
+                        from_date=_eff_start,
+                        to_date=_bt_end,
+                        option_type=_ot,
+                        expiry_type=_expiry_type,
+                        dhan_client=_dhan_cl,
+                        delay_seconds=0.6,
+                        progress_callback=_make_opt_prog(),
+                    )
 
-                    # Chunk into 30-day windows
-                    _chunks_opt = []
-                    _c_cur = _eff_start
-                    while _c_cur <= _bt_end:
-                        _c_end = min(_c_cur + _tdmod(days=29), _bt_end)
-                        _chunks_opt.append((_c_cur, _c_end))
-                        _c_cur = _c_end + _tdmod(days=1)
-
-                    _all_opt_frames = []
-                    for _ci, (_cf, _ct) in enumerate(_chunks_opt):
-                        _cdf = _fetch_opt_chunk(_cf, _ct, _ot)
-                        if not _cdf.empty:
-                            _all_opt_frames.append(_cdf)
-                        if _ci < len(_chunks_opt) - 1:
-                            _time_mod.sleep(0.5)
-
-                    if _all_opt_frames:
-                        _combined_opt = pd.concat(_all_opt_frames)
-                        _combined_opt = _combined_opt[~_combined_opt.index.duplicated(keep="last")].sort_index()
-                        _opt_dfs[_ot] = _combined_opt
+                    if _opt_df_fetched is not None and not _opt_df_fetched.empty:
+                        _opt_dfs[_ot] = _opt_df_fetched
+                        _status_ph.caption(f"✅ {_ot}: {len(_opt_df_fetched)} trading days loaded")
                     else:
-                        st.warning(f"⚠️ No {_ot} options data returned from Dhan. "
-                                   f"Strike offset is applied to ATM from Spot column.")
+                        st.warning(
+                            f"⚠️ No **{_ot}** options data returned from Dhan for "
+                            f"{_eff_start} → {_bt_end}. "
+                            f"Check the Streamlit logs for the API error details. "
+                            f"Trades requiring {_ot} data will be skipped."
+                        )
 
                     _prog_ph.progress(40 + int((_ot_i + 1) / len(_opt_types_to_fetch) * 30),
                                       f"📦 {_ot} data fetched")
+
+
 
                 # ── 3. Simulate Trades ────────────────────────────────────────
                 _prog_ph.progress(72, "⚙️ Simulating trades...")

@@ -511,6 +511,176 @@ def fetch_rolling_options_data(
     return combined
 
 
+def fetch_rolling_options_generic(
+    from_date,
+    to_date,
+    option_type: str = "PUT",   # "CALL" or "PUT"
+    expiry_type: str = "WEEKLY",
+    dhan_client=None,
+    delay_seconds: float = 0.6,
+    progress_callback=None,
+) -> pd.DataFrame:
+    """
+    Fetch NIFTY ATM rolling options data (CALL or PUT) from Dhan Rolling Options API.
+
+    Supports both CALL and PUT option types and WEEKLY/MONTHLY expiry.
+    Uses the passed dhan_client (or falls back to REST with saved credentials).
+
+    Args:
+        from_date:         Start date (date or str YYYY-MM-DD)
+        to_date:           End date (date or str YYYY-MM-DD)
+        option_type:       "CALL" or "PUT"
+        expiry_type:       "WEEKLY" or "MONTHLY"
+        dhan_client:       Authenticated Dhan client object (optional, falls back to REST)
+        delay_seconds:     Pause between API calls
+        progress_callback: Optional callable(current, total, label)
+
+    Returns:
+        Daily DataFrame (DatetimeIndex) with Open/High/Low/Close/Volume/OI/IV/Spot/Strike
+    """
+    import datetime as _dt
+
+    if isinstance(from_date, str):
+        from_date = _dt.date.fromisoformat(from_date)
+    if isinstance(to_date, str):
+        to_date = _dt.date.fromisoformat(to_date)
+    if isinstance(from_date, (datetime, pd.Timestamp)):
+        from_date = from_date.date() if hasattr(from_date, 'date') else from_date
+    if isinstance(to_date, (datetime, pd.Timestamp)):
+        to_date = to_date.date() if hasattr(to_date, 'date') else to_date
+
+    drv_type = "CALL" if option_type.upper() == "CALL" else "PUT"
+
+    # Clamp to available data range
+    from_date = max(from_date, DATA_AVAILABLE_FROM)
+    if from_date > to_date:
+        print(f"[OPT GENERIC] No data before {DATA_AVAILABLE_FROM}.")
+        return pd.DataFrame()
+
+    # If no client passed, try to get one
+    if dhan_client is None:
+        try:
+            from config import get_dhan_client, validate_credentials
+            validate_credentials()
+            dhan_client = get_dhan_client()
+        except Exception as e:
+            print(f"[OPT GENERIC] Dhan client unavailable ({e}). Will try direct REST.")
+
+    # Build 30-day chunks (Dhan rolling options API limit)
+    chunks = []
+    cur = from_date
+    while cur <= to_date:
+        end = min(cur + timedelta(days=29), to_date)
+        chunks.append((cur, end))
+        cur = end + timedelta(days=1)
+
+    print(f"[OPT GENERIC] Fetching {len(chunks)} chunks of {drv_type} {expiry_type} data ({from_date} → {to_date})...")
+
+    all_frames = []
+    for i, (cf, ct) in enumerate(chunks):
+        if progress_callback:
+            progress_callback(i + 1, len(chunks), f"{drv_type} chunk {i+1}/{len(chunks)}: {cf} → {ct}")
+
+        chunk_df = _fetch_generic_chunk(dhan_client, cf, ct, drv_type, expiry_type)
+        if chunk_df is not None and not chunk_df.empty:
+            all_frames.append(chunk_df)
+            print(f"[OPT GENERIC]   {cf} → {ct}: {len(chunk_df)} days")
+        else:
+            print(f"[OPT GENERIC]   {cf} → {ct}: no data")
+
+        if i < len(chunks) - 1:
+            time.sleep(delay_seconds)
+
+    if not all_frames:
+        print(f"[OPT GENERIC] No {drv_type} data returned from Dhan API.")
+        return pd.DataFrame()
+
+    combined = pd.concat(all_frames)
+    combined = combined[~combined.index.duplicated(keep="last")].sort_index()
+    print(f"[OPT GENERIC] Total {len(combined)} trading days for {drv_type}.")
+    return combined
+
+
+def _fetch_generic_chunk(
+    dhan_client, from_dt, to_dt, drv_type: str = "PUT", expiry_type: str = "WEEKLY"
+) -> pd.DataFrame:
+    """Fetch one ≤30-day chunk of NIFTY ATM rolling options data (CALL or PUT)."""
+    from_str = from_dt.strftime("%Y-%m-%d")
+    to_str   = to_dt.strftime("%Y-%m-%d")
+
+    # Try SDK first
+    if dhan_client is not None:
+        try:
+            resp = dhan_client.rolling_options_data(
+                exchange_segment="NSE_FNO",
+                instrument="OPTIDX",
+                drvOptionType=drv_type,
+                fromDate=from_str,
+                toDate=to_str,
+                strike="ATM",
+                expiryType=expiry_type,
+            )
+            if isinstance(resp, dict) and resp.get("status") == "success":
+                df = _parse_rolling_response(resp)
+                if not df.empty:
+                    return df
+            print(f"[OPT GENERIC] SDK returned non-success: {str(resp)[:150]}")
+        except Exception as e:
+            print(f"[OPT GENERIC] SDK call failed ({e}), trying direct REST...")
+
+    # Direct REST fallback
+    return _fetch_generic_chunk_rest(from_str, to_str, drv_type, expiry_type)
+
+
+def _fetch_generic_chunk_rest(
+    from_str: str, to_str: str, drv_type: str = "PUT", expiry_type: str = "WEEKLY"
+) -> pd.DataFrame:
+    """Direct REST call to Dhan Rolling Options endpoint — supports CALL and PUT."""
+    try:
+        from config import get_saved_credentials
+        creds = get_saved_credentials()
+        cid   = creds.get("client_id", "")
+        token = creds.get("access_token", "")
+    except Exception:
+        return pd.DataFrame()
+
+    if not cid or not token:
+        print("[OPT GENERIC] No credentials for REST call.")
+        return pd.DataFrame()
+
+    headers = {
+        "access-token": token,
+        "client-id":    cid,
+        "Content-Type": "application/json",
+    }
+    payload = {
+        "exchangeSegment": "NSE_FNO",
+        "instrument":      "OPTIDX",
+        "drvOptionType":   drv_type,
+        "fromDate":        from_str,
+        "toDate":          to_str,
+        "strike":          "ATM",
+        "expiryType":      expiry_type,
+    }
+
+    try:
+        resp = requests.post(DHAN_ROLLING_OPTIONS_URL, json=payload, headers=headers, timeout=30)
+        if resp.status_code == 200:
+            body = resp.json()
+            df = _parse_rolling_response(body)
+            if df.empty:
+                print(f"[OPT GENERIC] REST 200 but empty data. Response: {str(body)[:200]}")
+            return df
+        else:
+            print(f"[OPT GENERIC] REST {resp.status_code}: {resp.text[:300]}")
+    except Exception as e:
+        print(f"[OPT GENERIC] REST request failed: {e}")
+
+    return pd.DataFrame()
+
+
+
+
 # ─── Master Loader ────────────────────────────────────────────────────────────
 
 def load_or_build_hedge_data(from_date, to_date, expiry_type="WEEKLY", use_fallback: bool = True) -> pd.DataFrame:
