@@ -746,11 +746,13 @@ class MultiTFEngine:
         """
         tf_data = self.fetch_all_data(progress_callback)
 
-        # Build a daily date index from the 1D data (or longest available)
-        daily_df = tf_data.get("1D") or fetch_nifty_daily(
-            self.start_date, self.end_date, self.dhan_client
-        )
-        if daily_df.empty:
+        # Build a daily date index from the 1D data (or fetch it if not in tf_data)
+        daily_df = tf_data.get("1D")
+        if daily_df is None or (hasattr(daily_df, 'empty') and daily_df.empty):
+            daily_df = fetch_nifty_daily(
+                self.start_date, self.end_date, self.dhan_client
+            )
+        if daily_df is None or daily_df.empty:
             raise RuntimeError("Failed to fetch NIFTY daily data.")
 
         date_index = daily_df.index
